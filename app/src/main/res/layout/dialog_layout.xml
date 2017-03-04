@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 默认带 title,content ,一个btn的布局 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+    <LinearLayout android:layout_width="304dp"
+    	android:layout_gravity="center_horizontal"
+        android:layout_height="wrap_content"
+        android:id="@+id/ll_content"
+        android:background="@drawable/dialog_forget"
+        android:paddingTop="20dp"
+        android:orientation="vertical">
+        <TextView android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="@dimen/dialog_title_font_size"
+            android:id="@+id/tv_dialog_title"
+            android:fontFamily="@string/SleepFontFamily"
+            android:textColor="@color/black"
+            android:text=""/>
+        <TextView android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@string/SleepFontFamily"
+            android:textSize="@dimen/dialog_content_font_size"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="@dimen/dialog_content_margin"
+            android:layout_marginBottom="@dimen/dialog_content_margin"
+            android:textColor="@color/black"
+            android:gravity="center"
+            android:id="@+id/tv_dialog_intro"
+            />
+        
+         <View android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#C5C8C5"/>
+        <LinearLayout 
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+            
+             <TextView android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/ok"
+                android:id="@+id/tv_ok"
+                android:textSize="@dimen/dialog_btn_font_size"
+                android:fontFamily="@string/SleepFontFamily"
+                android:gravity="center"
+                android:textColor="@color/dialog_btn_font_color"
+                android:background="@drawable/btn_dialog_bg"
+                />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

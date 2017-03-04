@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+    <LinearLayout 
+        android:layout_width="304dp"
+    	android:layout_height="wrap_content"
+    	android:layout_gravity="center"
+        android:background="@drawable/dialog_forget"
+        android:paddingTop="26dp"
+        android:orientation="vertical">
+        <TextView android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="@dimen/dialog_title_font_size"
+            android:id="@+id/tv_title"
+            android:singleLine="true"
+            android:fontFamily="@string/SleepFontFamily"
+            android:textColor="@color/black"
+            android:text=""/>
+        <TextView android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/dialog_content_font_size"
+            android:fontFamily="@string/SleepFontFamily"
+            android:layout_marginLeft="@dimen/dialog_content_left"
+            android:layout_marginRight="@dimen/dialog_content_left"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="15dp"
+            android:textColor="@color/black"
+            android:gravity="center"
+            android:id="@+id/tv_content"
+            android:text=""/>
+        <View android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:fontFamily="@string/SleepFontFamily"
+            android:layerType="software" 
+            android:visibility="gone"
+            android:id="@+id/tv_content1"/>
+        
+         <View android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#C5C8C5"/>
+        <LinearLayout android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+            <TextView android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:text="@string/cancel"
+                android:layout_weight="1"
+                android:textSize="@dimen/dialog_btn_font_size"
+                android:fontFamily="@string/SleepFontFamily"
+                android:gravity="center"
+                android:id="@+id/tv_close"
+                android:textColor="@color/dialog_btn_font_color"
+                android:background="@drawable/btn_dialog_bg"
+                />
+            <View android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="#C5C8C5"/>
+            <TextView android:layout_width="0dp"
+               android:layout_height="match_parent"
+               android:text="@string/ok"
+               android:id="@+id/tv_ok"
+               android:layout_weight="1"
+               android:textSize="@dimen/dialog_btn_font_size"
+               android:fontFamily="@string/SleepFontFamily"
+               android:gravity="center"
+               android:textColor="@color/dialog_btn_font_color"
+               android:background="@drawable/btn_dialog_bg"
+               />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

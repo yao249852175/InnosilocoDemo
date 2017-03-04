@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:background="@color/colorBg"
+    android:layout_height="match_parent">
+    <include layout="@layout/layout_head"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+    <ListView
+        android:layout_width="match_parent"
+        android:scrollbars="none"
+        android:padding="@dimen/activity_vertical_margin"
+        android:id="@+id/list_talk"
+        android:layout_weight="1"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="1dp"
+        android:layout_height="wrap_content"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_edit"
+        android:gravity="center"
+        android:layout_marginLeft="@dimen/activity_vertical_margin"
+        android:layout_marginRight="@dimen/activity_vertical_margin"
+        android:layout_marginBottom="@dimen/activity_vertical_margin"
+        android:orientation="horizontal">
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:paddingLeft="@dimen/activity_vertical_margin"
+            android:id="@+id/edit_talk"
+            android:paddingRight="@dimen/activity_vertical_margin"
+            android:background="@drawable/bg_edit_talk"
+            android:layout_height="@dimen/height_edit" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:textColor="@color/colorWhite"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:layout_marginLeft="5dp"
+            android:textSize="18sp"
+            android:onClick="onClick"
+            android:text="发送"
+            android:background="@drawable/bg_send"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
