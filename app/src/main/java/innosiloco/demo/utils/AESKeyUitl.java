@@ -6,6 +6,7 @@ package innosiloco.demo.utils;
 public class AESKeyUitl
 {
     private static  AESKeyUitl aesKeyUitl;
+    public static int myvid=1155,mypid=22336;
 
     private AESKeyUitl()
     {

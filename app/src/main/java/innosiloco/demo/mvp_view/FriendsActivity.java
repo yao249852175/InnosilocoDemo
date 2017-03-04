@@ -1,6 +1,15 @@
 package innosiloco.demo.mvp_view;
 
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
 import android.os.Handler;
 import android.os.Message;
 import android.view.LayoutInflater;
@@ -13,6 +22,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Iterator;
+
 import de.greenrobot.event.Subscribe;
 import de.greenrobot.event.ThreadMode;
 import innosiloco.demo.MyApp;
@@ -22,6 +34,7 @@ import innosiloco.demo.beans.EventFriendListUpdate;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.service.ParseDataHelper;
+import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.RonLog;
 import innosiloco.demo.utils.TalkHelper;
@@ -33,18 +46,170 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
      */
     public final int LookTalks = 1;
 
+    private TextView textView;
+
     private ListView listView;
+
+    private UsbManager manager;
+
+    private UsbDevice device;
+
+    private UsbDeviceConnection connection;
+
+    byte[] mybuffer=new byte[1024];
+    boolean threadcontrol_ct=false;
+    boolean threadcontrol_mt=false;
+    boolean threadsenddata=false;
+
+
+    UsbInterface[] usbinterface=null;
+    UsbEndpoint[][] endpoint=new UsbEndpoint[5][5];
+
+
     @Override
     public void findViews() {
         listView = (ListView) findViewById(R.id.list_friends);
+        textView = (TextView) findViewById(R.id.test);
     }
 
+    private final static String ACTION ="android.hardware.usb.action.USB_STATE";
+    private final static String ACTION1 ="android.hardware.usb.action.USB_DEVICE_DETACHED";
+    private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
+
+    private PendingIntent mPermissionIntent;
     @Override
     public void initViews()
     {
         listView.setAdapter(friendListAdapter);
         setTitle("在线列表");
+        IntentFilter filter = new IntentFilter(ACTION1);
+        filter.addAction(ACTION_USB_PERMISSION);
+//        filter.addAction(ACTION1);
+        registerReceiver(mUsbReceiver, filter);
+        mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+        beginCheckDevice();
     }
+
+    /***********************
+     * 检测当前的USB是否已经连接
+     * @return
+     */
+    private boolean checkUSBDevice()
+    {
+
+        manager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
+        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
+        while (deviceIterator.hasNext()) {
+            device = deviceIterator.next();
+            if(device.getVendorId()== AESKeyUitl.getSingleton().myvid&&device.getProductId()==AESKeyUitl.getSingleton().mypid)
+            {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+
+    class ConnectedThread extends Thread{
+        @Override
+        public void destroy() {
+            // TODO Auto-generated method stub
+            super.destroy();
+        }
+        public ConnectedThread(){
+            if(connection!=null){
+                connection.close();
+            }
+            usbinterface=new UsbInterface[device.getInterfaceCount()];
+            for (int i = 0 ; i < usbinterface.length; i ++)
+            {
+                usbinterface[i] = device.getInterface(i);
+                for(int j=0;j<usbinterface[i].getEndpointCount();j++) {
+                    endpoint[i][j] = usbinterface[i].getEndpoint(j);
+                }
+            }
+            connection = manager.openDevice(device);
+            connection.claimInterface(usbinterface[1], true);
+        }
+        int a = 0;
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+            int datalength;
+            while(threadcontrol_ct){
+                if(threadsenddata){
+                    threadsenddata=false;
+                    byte[] mytmpbyte= "helloworld".getBytes();
+                    connection.bulkTransfer(endpoint[1][0], mytmpbyte, mytmpbyte.length, 30);
+                }
+                datalength=connection.bulkTransfer(endpoint[1][1], mybuffer, 1024, 30);
+//                mydatatransfer.AddData(mybuffer, datalength);
+                if(datalength>=0){
+                    handler.obtainMessage(1,new String(mybuffer) + ":"+ a++).sendToTarget();
+                }
+            }
+        }
+    }
+    private ConnectedThread connectedThread;
+
+
+    private void beginCheckDevice()
+    {
+        //检查权限
+
+        new Thread(runnable).start();
+    }
+
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run()
+        {
+            while (true)
+            {
+                if(checkUSBDevice())
+                {
+                    //判断权限
+                    if(manager.hasPermission(device)){
+                        connectedThread =  new ConnectedThread();
+                        connectedThread.start();
+                    }else
+                    {
+                        manager.requestPermission(device, mPermissionIntent);
+                    }
+                    handler.obtainMessage(1,"检测到设备了").sendToTarget();
+                    threadcontrol_ct=true;
+
+
+                    break;
+                }else
+                {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    };
+
+    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if(ACTION_USB_PERMISSION.equals(action))
+            {
+                connectedThread =  new ConnectedThread();
+                connectedThread.start();
+                return;
+            }
+            threadcontrol_ct = false;
+            beginCheckDevice();
+            Toast.makeText(FriendsActivity.this, action +":" ,Toast.LENGTH_LONG).show();
+        };
+    };
 
     @Override
     public void initLisenter() {
@@ -109,6 +274,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         }
     };
 
+
     @Subscribe(threadMode = ThreadMode.MainThread)
     public void setUserInfoOver(EventFriendListUpdate eventFriendListUpdate)
     {
@@ -164,6 +330,9 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                 case 0:
                     friendListAdapter.notifyDataSetChanged();
                     break;
+                case 1:
+                    textView.setText(msg.obj.toString());
+                    break;
             }
         }
     };
@@ -199,26 +368,27 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         {
 //            if(eventDownLine.clientId == AppConfig.clientId)
 //            {//用户自己的客户端
-                if(dialogCreatUtil != null )
-                {
-                    dialogCreatUtil.showSingleBtnDialog("","连接服务器失败",FriendsActivity.this);
-                }
+            if(dialogCreatUtil != null )
+            {
+                dialogCreatUtil.showSingleBtnDialog("","连接服务器失败",FriendsActivity.this);
+            }
 //            }
         }
     }
 
     private class FriendViewHolder
-      {
-          ImageView head;
-          TextView name;
-          TextView speedNum;
-          TextView lastSpeed;
-      }
+    {
+        ImageView head;
+        TextView name;
+        TextView speedNum;
+        TextView lastSpeed;
+    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         MyApp.getSingleApp().mySocket.stop();
         MyApp.getSingleApp().mySocket = null;
+        unregisterReceiver(mUsbReceiver);
     }
 }
