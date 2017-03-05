@@ -216,7 +216,7 @@ public class SocketThread
                     }else
                     {
                         recData[index ++ ] = data;
-                        if(index > 5&&ParseDataHelper.checkEnd(recData,index- 4))
+                        if(index > 5&& ParseDataHelper.checkEnd(recData,index- 4))
                         {
                             parseData(recData,index);
                             index = 0;

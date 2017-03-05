@@ -6,7 +6,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -24,7 +23,7 @@ import innosiloco.demo.R;
 import innosiloco.demo.beans.EventDownLine;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.TalkListBean;
-import innosiloco.demo.dao.MyPreference;
+import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.RonLog;
 import innosiloco.demo.utils.TalkHelper;
@@ -73,15 +72,14 @@ public class SpeedActivity extends BaseActivity {
         listView.setAdapter(baseAdapter);
         fromID = getIntent().getByteExtra(TalkFromID,(byte)-1);
         fromNick = getIntent().getStringExtra(TalkFromNick);
-        TalkListBean  talkListBean = TalkHelper.getSingle().getOnceTalk(fromID);
+        TalkListBean talkListBean = TalkHelper.getSingle().getOnceTalk(fromID);
         if(talkListBean != null && talkListBean.talks!= null)
         {
             talks.addAll(talkListBean.talks);
         }
 
 
-        MyPreference myPreference  = new MyPreference(this);
-        myNick =  myPreference.getStringValue(myPreference.Label_UserNick);
+        myNick = AppConfig.userNick;
         setTitle("talk with:" + fromNick);
 
     }
@@ -116,6 +114,12 @@ public class SpeedActivity extends BaseActivity {
 
     public void onClick(View view)
     {
+        if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+        {
+            dialogCreatUtil.showSingleBtnDialog(null,getString(R.string.keyIsloss),this);
+            return;
+        }
+
         view.setEnabled(false);
         TalkBean talkBean = new TalkBean();
         talkBean.sendID = AppConfig.clientId;
@@ -211,6 +215,7 @@ public class SpeedActivity extends BaseActivity {
         }
        notifyData();
     }
+
 
     @Subscribe(threadMode = ThreadMode.MainThread)
     public void userOnline(EventDownLine eventDownLine)

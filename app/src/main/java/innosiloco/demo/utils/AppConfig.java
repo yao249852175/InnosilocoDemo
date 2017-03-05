@@ -10,10 +10,18 @@ public class AppConfig
      */
     public static final int PORT = 4022;
 
+    /**************
+     * true表示 不需要 设备，可以进行交换
+     * false表示，需要设备进行交换
+     */
+    public static boolean isTest = false;
+
     /**********************
      * 服务器的ip地址
      */
     public static final String ServerIP = "192.168.1.107";
+
+    public static  String userNick;
 
 
     public static String clientIp ;

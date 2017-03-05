@@ -118,7 +118,8 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             // TODO Auto-generated method stub
             super.destroy();
         }
-        public ConnectedThread(){
+        public ConnectedThread()
+        {
             if(connection!=null){
                 connection.close();
             }
@@ -166,6 +167,11 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         @Override
         public void run()
         {
+            if(!AppConfig.isTest)
+            {//收到了，设备发来的key
+                AESKeyUitl.getSingleton().setDecode_key("");
+                AESKeyUitl.getSingleton().setEncode_key("");
+            }
             while (true)
             {
                 if(checkUSBDevice())
@@ -331,6 +337,11 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     friendListAdapter.notifyDataSetChanged();
                     break;
                 case 1:
+                    if(!AppConfig.isTest)
+                    {//收到了，设备发来的key
+                        AESKeyUitl.getSingleton().setDecode_key("ron");
+                        AESKeyUitl.getSingleton().setEncode_key("ron");
+                    }
                     textView.setText(msg.obj.toString());
                     break;
             }
@@ -390,5 +401,6 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         MyApp.getSingleApp().mySocket.stop();
         MyApp.getSingleApp().mySocket = null;
         unregisterReceiver(mUsbReceiver);
+        MyApp.getSingleApp().exitApp();
     }
 }

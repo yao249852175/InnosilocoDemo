@@ -158,7 +158,7 @@ public class MyServerSocket implements Runnable,MySocket
         frameBean.send2ID = 0;
         frameBean.cmdIndex = AppConfig.TalkCode;
         String content = ParseDataHelper.talkBean2Json(talkBean);
-        sendMsg2Client(talkBean.toID,AppConfig.TalkCode,content);
+        sendMsg2Client(talkBean.toID, AppConfig.TalkCode,content);
     }
 
     /********************
@@ -170,7 +170,7 @@ public class MyServerSocket implements Runnable,MySocket
             if(isAlive)
             {
                 boolean hadExit = false;
-                for (UserBean user:ParseDataHelper.onlineUser)
+                for (UserBean user: ParseDataHelper.onlineUser)
                 {
                     if(user.userID == userBean.userID)
                     {
@@ -187,7 +187,7 @@ public class MyServerSocket implements Runnable,MySocket
                 }
             }else
             {//用户下线通知
-                for (UserBean bean:ParseDataHelper.onlineUser)
+                for (UserBean bean: ParseDataHelper.onlineUser)
                 {
                     if(bean.userID == userBean.userID)
                     {
@@ -246,6 +246,6 @@ public class MyServerSocket implements Runnable,MySocket
      */
     public interface ClientIsAliveListener
     {
-        public void onClientAlive(boolean isAlive,UserBean userBean);
+        public void onClientAlive(boolean isAlive, UserBean userBean);
     }
 }

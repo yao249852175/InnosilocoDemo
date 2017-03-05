@@ -4,14 +4,10 @@ package innosiloco.demo.utils;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
-import android.graphics.Color;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.webkit.WebView;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import innosiloco.demo.R;
@@ -44,12 +40,18 @@ public class DialogCreatUtil
 	
 	
 	private Dialog singleBtnDialog;
+
+	public void showSingleBtnDialog(String title, String intro, Activity activity)
+	{
+		showSingleBtnDialog(title,intro,activity,null);
+	}
+
 	/**
 	 * 描述：单按钮提示dialog
 	 * @param title
 	 * @param intro
 	 */
-	public void showSingleBtnDialog(String title,String intro,Activity activity)
+	public void showSingleBtnDialog(String title, String intro, Activity activity, final OnClickListener onClickListener)
 	{
 		if(singleBtnDialog != null && singleBtnDialog.isShowing())
 		{
@@ -69,15 +71,19 @@ public class DialogCreatUtil
 		TextView dContent = (TextView) v.findViewById(R.id.tv_dialog_intro);
 		dContent.setText(intro);
 		View ok = v.findViewById(R.id.tv_ok);
-		
 		ok.setOnClickListener(new OnClickListener()
 		{
 			@Override
 			public void onClick(View arg0) 
 			{
 				singleBtnDialog.dismiss();
+				if(onClickListener != null )
+				{
+					onClickListener.onClick(arg0);
+				}
 			}
 		});
+
 		
 		singleBtnDialog.setContentView(v);
 		singleBtnDialog.setCanceledOnTouchOutside(false);

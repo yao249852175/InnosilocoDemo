@@ -9,4 +9,11 @@
     <string name="selectServer_content">请选择你要使用的服务类型:</string>
     <string name="selectServer_cilent">客户端</string>
     <string name="selectServer_server">服务端</string>
+
+    <string name="client_connWifi">请到wifi设置项,\n连接服务器端手机开启wifi热点\n(SSID:%1$s,pwd:%2$s)</string>
+
+    <string name="name_Server">服务端</string>
+    <string name="name_Client">客户端</string>
+
+    <string name="keyIsloss">lose security key</string>
 </resources>

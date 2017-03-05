@@ -1,6 +1,5 @@
 package innosiloco.demo.service;
 
-import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.ICallback;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;

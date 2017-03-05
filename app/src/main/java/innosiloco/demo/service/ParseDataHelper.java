@@ -1,5 +1,7 @@
 package innosiloco.demo.service;
 
+import android.text.TextUtils;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -8,8 +10,8 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import innosiloco.demo.beans.FrameBean;
-import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.beans.TalkBean;
+import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AESUtil;
 import innosiloco.demo.utils.AppConfig;
@@ -35,9 +37,29 @@ public class ParseDataHelper
      */
     public static String talkBean2Json(TalkBean talkBean)
     {
-        Gson gson = new Gson();
-        return gson.toJson(talkBean);
+        try {
+            RonLog.LogE("机密前:" + talkBean.talkContent);
+//            byte[] content = AESUtil.encryptArgByte(
+//                    AESKeyUitl.getSingleton().getEncode_key().getBytes(),talkBean.talkContent.getBytes(utf_8));
+//            talkBean.talkContent = new String(content,utf_8);
+            TalkBean talkBean1 = new TalkBean();
+            talkBean1.toID = talkBean.toID;
+            talkBean1.sendID = talkBean.sendID;
+
+
+            talkBean1.talkContent= AESUtil.encrypt(AESKeyUitl.getSingleton().getEncode_key(),talkBean.talkContent);
+            RonLog.LogE("加密后:" + talkBean1.talkContent);
+            Gson gson = new Gson();
+            String json = gson.toJson(talkBean1);
+            return json;
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return null;
     }
+
+    private static String utf_8 = "UTF-8";
 
     /****************************
      * json转TalkBean
@@ -50,6 +72,20 @@ public class ParseDataHelper
         Gson gson = new Gson();
         try{
             TalkBean talkBean =  gson.fromJson(json,TalkBean.class);
+            RonLog.LogE("解密前:" + talkBean.talkContent);
+            try {
+               /* byte[] content =AESUtil.decryptArgByte(
+                        AESKeyUitl.getSingleton().getDecode_key().getBytes(),talkBean.talkContent.getBytes(utf_8));
+                talkBean.talkContent = new String(content,utf_8);*/
+                if(!TextUtils.isEmpty(AESKeyUitl.getSingleton().getDecode_key()))
+                talkBean.talkContent = AESUtil.decrypt(AESKeyUitl.getSingleton().getDecode_key(),talkBean.talkContent);
+                RonLog.LogE("解密后:" + talkBean.talkContent);
+            }catch (Exception e)
+            {
+                e.printStackTrace();
+
+            }
+
             return talkBean;
         }catch (Exception e)
         {
@@ -112,14 +148,18 @@ public class ParseDataHelper
     public static byte[] frame2Btye(FrameBean frameBean)
     {
         //content设计到加密
-        byte[] SRCData= frameBean.content;
-        try {
-            frameBean.content = AESUtil.encryptArgByte(
-                    AESKeyUitl.getSingleton().getAESKey().getBytes(),SRCData);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+      /*  byte[] SRCData= frameBean.content;
+        if(frameBean.cmdIndex == AppConfig.TalkCode)
+        {
+            try {
+                frameBean.content = AESUtil.encryptArgByte(
+                        AESKeyUitl.getSingleton().getEncode_key().getBytes(),SRCData);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }*/
+
         byte[] data = new byte[frameBean.content.length + 8 ];
         int index = 0;
         data[index++] = (byte) 0xF0;
@@ -138,21 +178,25 @@ public class ParseDataHelper
      * @param data
      * @return
      */
-    public static FrameBean byte2Frame(byte[] data,int pos,int length)
+    public static FrameBean byte2Frame(byte[] data, int pos, int length)
     {
         FrameBean frameBean = new FrameBean();
         frameBean.send2ID= data[1 + pos];
         frameBean.cmdIndex = data[2 + pos];
         byte[] enSrcData = new byte[length - 8];
         System.arraycopy(data,3+pos,enSrcData,0,enSrcData.length);
+        frameBean.content = enSrcData;
         //解密
-        try {
-            frameBean.content = AESUtil.decryptArgByte(
-                    AESKeyUitl.getSingleton().getAESKey().getBytes(),enSrcData);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        /*if(frameBean.cmdIndex == AppConfig.TalkCode)
+        {
+            try {
+                frameBean.content = AESUtil.decryptArgByte(
+                        AESKeyUitl.getSingleton().getDecode_key().getBytes(),enSrcData);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }*/
 
         frameBean.crc8 = data[length-5+ pos];
         return frameBean;

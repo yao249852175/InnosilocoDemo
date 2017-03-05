@@ -1,8 +1,8 @@
 package innosiloco.demo;
 
 import android.app.Application;
+import android.os.Process;
 
-import innosiloco.demo.service.MyServerSocket;
 import innosiloco.demo.service.MySocket;
 
 /**
@@ -22,5 +22,11 @@ public class MyApp extends Application
     public void onCreate() {
         super.onCreate();
         this.myapp = this;
+    }
+
+    public void exitApp()
+    {
+        Process.killProcess(android.os.Process.myPid());  //获取PID
+        System.exit(0);
     }
 }
