@@ -3,7 +3,12 @@ package innosiloco.demo.service;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,10 +19,12 @@ import de.greenrobot.event.EventBus;
 import innosiloco.demo.MyApp;
 import innosiloco.demo.beans.EventDownLine;
 import innosiloco.demo.beans.EventFriendListUpdate;
+import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AppConfig;
+import innosiloco.demo.utils.FileUtils;
 import innosiloco.demo.utils.RonLog;
 import innosiloco.demo.utils.TalkHelper;
 
@@ -44,7 +51,7 @@ public class SocketThread
 
     private OutputStream outputStream;
 
-    private LinkedBlockingQueue<byte[]> sendMsgs;
+    private LinkedBlockingQueue<FileBean> sendMsgs;
 
     /**********************************
      * <p>标示 读写线程，是否可以使用</p>
@@ -150,7 +157,20 @@ public class SocketThread
      */
     public void addMsg(byte[] data)
     {
-        this.sendMsgs.offer(data);
+        FileBean fileBean = new FileBean(FileBean.DataType,(byte)0,(byte) 0);
+        fileBean.data = data;
+        this.sendMsgs.offer(fileBean);
+    }
+
+    /***********
+     * <p>添加发送的消息</p>
+     * @param filePath
+     */
+    public void addFileMsg(String filePath,byte from,byte to)
+    {
+        FileBean fileBean = new FileBean(FileBean.FileType,from,to);
+        fileBean.filePath = filePath;
+        this.sendMsgs.offer(fileBean);
     }
 
     private Handler handler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
@@ -161,7 +181,6 @@ public class SocketThread
             {
                 case 0://没有收到数据,说明socket断开了
                     stop();
-
                     break;
 
                 case 1://开始发送 心跳包
@@ -195,7 +214,7 @@ public class SocketThread
         @Override
         public void run()
         {
-            byte[] recData = new byte[5000];
+            byte[] recData = new byte[204800];
             int index = 0;
             byte data = 0;
             try {
@@ -237,6 +256,18 @@ public class SocketThread
      */
     private void parseData(byte[] data ,int length)
     {
+        //文件传输没有做校验操作。所以在校验前面检查
+        RonLog.LogE("cmdIndex:" + data[2]);
+        if(data[2] == AppConfig.ResponseFile)//对方放松文件来了
+        {
+            try {
+                getFileMsg(data,length);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
         if(ParseDataHelper.checkCRC(data,0,length))
         {
             FrameBean frameBean = ParseDataHelper.byte2Frame(data,0,length);
@@ -295,6 +326,56 @@ public class SocketThread
         }
     }
 
+    //解析数据[F0,(Send2ID),01(CODEIDNEx),fromID,fileType,fileData,CRC8,END]
+    private void getFileMsg(byte[] data,int length) throws IOException
+    {
+        if(length <  10 ) return;
+
+
+        byte fileType = data[4];
+        RonLog.LogE("文件类型:" + fileType);
+        String fileName = String.valueOf(System.currentTimeMillis());
+        switch (fileType)
+        {
+            case FileBean.isJPE:
+                default:
+                fileName += ".jpg";
+                break;
+            case FileBean.isPNG:
+                fileName += ".png";
+                break;
+            case FileBean.isMp3:
+                fileName += ".mp3";
+                break;
+        }
+
+        File file =new File(AppConfig.BaseDirectory + fileName);
+        if(!file.getParentFile().exists())
+        {
+           boolean b=  file.getParentFile().mkdirs();
+            RonLog.LogE("创建文件夹失败:" +b+ file.getParentFile().getPath());
+        }
+
+        if(file.exists())
+        {
+            file.delete();
+        }
+
+        file.createNewFile();
+        OutputStream outputStream = new FileOutputStream(file);
+        outputStream.write(data,5,length - 5);
+        outputStream.flush();
+        outputStream.close();
+
+        TalkBean talkBean = new TalkBean();
+        talkBean.sendID = data[3];
+        talkBean.toID = data[1];
+        talkBean.talkContent = file.getPath();
+
+        TalkHelper.getSingle().addTalk( talkBean );
+        EventBus.getDefault().post(talkBean);
+    }
+
     /******************
      * <p>写的线程</p>
      */
@@ -305,9 +386,16 @@ public class SocketThread
             while (writeAndReadAble)
             {
                 try {
-                   byte[] data = sendMsgs.take();
-                    if(data != null)
-                        outputStream.write(data);
+                   FileBean fileBean = sendMsgs.take();
+                    if(fileBean.type == FileBean.DataType)
+                    {
+                        if(fileBean.data != null)
+                            outputStream.write(fileBean.data);
+                    }else if(fileBean.type == FileBean.FileType)
+                    {
+                        sendFile(fileBean.fromID,fileBean.send2ID,fileBean.filePath,outputStream);
+                    }
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -316,4 +404,55 @@ public class SocketThread
             }
         }
     };
+
+    /***********
+     * 发送文件
+     * @param fromID 来自何方
+     * @param path   文件的路径
+     * @param outputStream
+     * 解析数据[F0,(Send2ID),01(CODEIDNEx),fromID,fileType,fileData,CRC8,END]
+     */
+    private void sendFile(byte fromID,byte toID,String path,OutputStream outputStream)
+    {
+        File file = new File(path);
+        if(file.length() > 90* 1024 || !file.isFile())
+        {
+            return;
+        }
+        byte fileType =FileUtils.fliePath2Type(path);
+
+        byte[] cache = new byte[1024];
+        byte[] begin = new byte[]{(byte) 0xF0,toID,AppConfig.ResponseFile,fromID,fileType};
+        int length = 0;
+        InputStream inputStream = null;
+        if(file.isFile())
+        {
+            try {
+                 inputStream = new FileInputStream(file);
+                outputStream.write(begin);
+
+                length = inputStream.read(cache);
+                while (length > 0)
+                {
+                    outputStream.write(cache,0,length);
+                    outputStream.flush();
+                    length = inputStream.read(cache);
+                }
+                outputStream.write(0);
+                outputStream.write(AppConfig.endWith.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            //关闭文件输入流
+            if(inputStream != null )
+            {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

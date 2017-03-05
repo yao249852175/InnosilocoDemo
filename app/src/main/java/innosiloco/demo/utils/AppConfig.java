@@ -1,5 +1,7 @@
 package innosiloco.demo.utils;
 
+import android.os.Environment;
+
 /**
  * Created by Administrator on 2017/2/25.
  */
@@ -14,7 +16,7 @@ public class AppConfig
      * true表示 不需要 设备，可以进行交换
      * false表示，需要设备进行交换
      */
-    public static boolean isTest = false;
+    public static boolean isTest = true;
 
     /**********************
      * 服务器的ip地址
@@ -32,6 +34,11 @@ public class AppConfig
      */
     public static final byte FriendCode = 0x01;
 
+    /*********
+     * 保存cache的目录
+     */
+    public static String BaseDirectory = Environment
+            .getExternalStorageDirectory() + "/inno/cache/";
 
     /********************
      * <p>解析的类型</p>
@@ -50,6 +57,17 @@ public class AppConfig
      */
     public static final byte SocketHeart = 0x04;
 
+    /***********
+     * 请求文件
+     */
+    public static final byte RequestFile = 0x05;
+
+    /**********
+     * 发送文件
+     */
+    public static final byte ResponseFile = 0x06;
+
+
     /*******************
      * <p>客户端的ID号</p>
      */
@@ -66,4 +84,6 @@ public class AppConfig
      *	endWith = "$_@#";
      */
     public  static String endWith = "$_@-";
+
+    public static final long maxSendFIleLength = 90*1024;
 }

@@ -25,5 +25,7 @@ public interface MySocket
      */
     public void sendTalk(TalkBean talkBean);
 
+    public void sendFileTalk(TalkBean talkBean);
+
 
 }

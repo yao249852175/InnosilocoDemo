@@ -1,16 +1,22 @@
 package innosiloco.demo.service;
 
+import android.graphics.BitmapFactory;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 
 import innosiloco.demo.MyApp;
+import innosiloco.demo.R;
+import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.ICallback;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AppConfig;
+import innosiloco.demo.utils.BitmapUtils;
+import innosiloco.demo.utils.FileUtils;
 
 /**
  * Created by ron on 2017/2/26.
@@ -92,5 +98,31 @@ public class MyClientSocket implements Runnable,MySocket
         frameBean.cmdIndex = AppConfig.TalkCode;
         frameBean.content = ParseDataHelper.talkBean2Json(talkBean).getBytes();
         socketThread.addMsg(ParseDataHelper.frame2Btye(frameBean));
+    }
+
+    @Override
+    public void sendFileTalk(TalkBean talkBean) {
+        byte type = FileUtils.fliePath2Type(talkBean.talkContent);
+        if(type == FileBean.isMp3 )
+        {
+            File file = new File(talkBean.talkContent);
+            if(file.isFile() && file.length() > AppConfig.maxSendFIleLength)
+            {
+                Toast.makeText(MyApp.getSingleApp(),MyApp.getSingleApp().getString(R.string.uploadFileIsBig),Toast.LENGTH_SHORT).show();
+            }else
+            {
+                socketThread.addFileMsg(talkBean.talkContent,talkBean.sendID,talkBean.toID);
+            }
+        }else
+        if(type == FileBean.isJPE|| type == FileBean.isPNG )
+        {
+            File file = new File(talkBean.talkContent);
+            if(file.isFile() && file.length() > AppConfig.maxSendFIleLength)
+            {
+                talkBean.talkContent = BitmapUtils.compressBitmap(BitmapFactory.decodeFile(file.getPath()));
+            }
+
+            socketThread.addFileMsg(talkBean.talkContent,talkBean.sendID,talkBean.toID);
+        }
     }
 }

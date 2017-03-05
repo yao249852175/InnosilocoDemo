@@ -114,11 +114,18 @@ public class SpeedActivity extends BaseActivity {
 
     public void onClick(View view)
     {
+        if(true)
+        {
+            sendFileMsg();
+            return;
+        }
         if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
         {
             dialogCreatUtil.showSingleBtnDialog(null,getString(R.string.keyIsloss),this);
             return;
         }
+
+
 
         view.setEnabled(false);
         TalkBean talkBean = new TalkBean();
@@ -137,6 +144,18 @@ public class SpeedActivity extends BaseActivity {
         notifyData();
         view.setEnabled(true);
         editText.setText("");
+    }
+
+    public void sendFileMsg()
+    {
+        TalkBean talkBean = new TalkBean();
+        talkBean.sendID = AppConfig.clientId;
+        talkBean.toID = fromID;
+        talkBean.talkContent="/sdcard/plane1.png";
+        MyApp.getSingleApp().mySocket.sendFileTalk(talkBean);
+        TalkHelper.getSingle().addMySelfTalk(talkBean);
+        talks.add(talkBean);
+        notifyData();
     }
 
     @Override

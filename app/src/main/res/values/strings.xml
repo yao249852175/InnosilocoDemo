@@ -16,4 +16,6 @@
     <string name="name_Client">客户端</string>
 
     <string name="keyIsloss">lose security key</string>
+
+    <string name="uploadFileIsBig">上传文件太大</string>
 </resources>

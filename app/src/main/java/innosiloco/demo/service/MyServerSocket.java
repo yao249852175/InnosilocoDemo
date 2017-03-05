@@ -1,5 +1,9 @@
 package innosiloco.demo.service;
 
+import android.graphics.BitmapFactory;
+import android.widget.Toast;
+
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,12 +11,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.greenrobot.event.EventBus;
+import innosiloco.demo.MyApp;
+import innosiloco.demo.R;
 import innosiloco.demo.beans.EventFriendListUpdate;
+import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.ICallback;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AppConfig;
+import innosiloco.demo.utils.BitmapUtils;
+import innosiloco.demo.utils.FileUtils;
 import innosiloco.demo.utils.RonLog;
 
 /**
@@ -247,5 +256,44 @@ public class MyServerSocket implements Runnable,MySocket
     public interface ClientIsAliveListener
     {
         public void onClientAlive(boolean isAlive, UserBean userBean);
+    }
+
+    @Override
+    public void sendFileTalk(TalkBean talkBean)
+    {
+        SocketThread socketThread1 = null;
+        for (SocketThread socketThread:socketThreadList)
+        {
+            if(socketThread.clientId == talkBean.toID)
+            {
+                socketThread1 = socketThread;
+                break;
+            }
+        }
+        if(socketThread1 == null )
+           return;
+
+        byte type = FileUtils.fliePath2Type(talkBean.talkContent);
+        if(type == FileBean.isMp3 )
+        {
+            File file = new File(talkBean.talkContent);
+            if(file.isFile() && file.length() > AppConfig.maxSendFIleLength)
+            {
+                Toast.makeText(MyApp.getSingleApp(),MyApp.getSingleApp().getString(R.string.uploadFileIsBig),Toast.LENGTH_SHORT).show();
+            }else
+            {
+                socketThread1.addFileMsg(talkBean.talkContent,talkBean.sendID,talkBean.toID);
+            }
+        }else
+        if(type == FileBean.isJPE|| type == FileBean.isPNG )
+        {
+            File file = new File(talkBean.talkContent);
+            if(file.isFile() && file.length() > AppConfig.maxSendFIleLength)
+            {
+                talkBean.talkContent = BitmapUtils.compressBitmap(BitmapFactory.decodeFile(file.getPath()));
+            }
+
+            socketThread1.addFileMsg(talkBean.talkContent,talkBean.sendID,talkBean.toID);
+        }
     }
 }

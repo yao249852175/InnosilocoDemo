@@ -59,21 +59,21 @@ public class SplashActivty extends BaseActivity
     public void initViews()
     {
         if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.INTERNET)
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED)
         {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.INTERNET,
                             Manifest.permission.ACCESS_WIFI_STATE,
                             Manifest.permission.CHANGE_WIFI_STATE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
                             Manifest.permission.WAKE_LOCK},
                     0);
         }else
         {
            init();
         }
-
-
     }
 
     @Override
