@@ -1,18 +1,33 @@
 package innosiloco.demo.mvp_view;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Handler;
+import android.os.PowerManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,25 +36,37 @@ import de.greenrobot.event.ThreadMode;
 import innosiloco.demo.MyApp;
 import innosiloco.demo.R;
 import innosiloco.demo.beans.EventDownLine;
+import innosiloco.demo.beans.FileBean;
+import innosiloco.demo.beans.SecretKeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.TalkListBean;
+import innosiloco.demo.mvp_view.iview.FileSelectActivity;
 import innosiloco.demo.utils.AESKeyUitl;
+import innosiloco.demo.utils.AccRecord;
 import innosiloco.demo.utils.AppConfig;
+import innosiloco.demo.utils.BitmapUtils;
+import innosiloco.demo.utils.FileUtils;
 import innosiloco.demo.utils.RonLog;
 import innosiloco.demo.utils.TalkHelper;
+
+import static android.R.id.message;
 
 /**
  * Created by ron on 2017/2/25.
  */
-public class SpeedActivity extends BaseActivity {
+public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
     private ListView listView;
+    private Button sendMsgBtn;
+    private TextView titleView;
     public static final String TalkFromID = "TalkFromID";
 
     public static final String TalkFromNick = "TalkFromNick";
 
     private List<TalkBean> talks;
-
+    private MediaPlayer mediaPlayer = null;
+    //标示是否在播放
+    public static boolean    		isPlaying = false;
     /********************
      * 发送者的ID号
      */
@@ -54,7 +81,15 @@ public class SpeedActivity extends BaseActivity {
      * 客户端的Nick
      */
     private String myNick;
+    private final int REQUEST_PICTURE_LOCAL = 1;
+    private final int REQUEST_FILE_LOCAL=3;
+    public static final int  	AUDIO_STATUS=2;
+    private AccRecord voiceRecorder;
+    private Handler handler=new Handler() {
+        public void handleMessage(android.os.Message msg) {
 
+        }
+    };
     /*****************
      * 编辑聊天内容
      */
@@ -63,7 +98,11 @@ public class SpeedActivity extends BaseActivity {
     public void findViews()
     {
         listView = (ListView) findViewById(R.id.list_talk);
-        editText = (EditText) findViewById(R.id.edit_talk);
+        sendMsgBtn = (Button) findViewById(R.id.send_msg_btn);
+        sendMsgBtn.setOnClickListener(this);
+        findViewById(R.id.press_to_speak_btn).setOnTouchListener(new PressToSpeackTouchListener());
+        editText = (EditText) findViewById(R.id.message_edt);
+        titleView = (TextView)findViewById(R.id.tv_head_title);
     }
 
     @Override
@@ -80,8 +119,11 @@ public class SpeedActivity extends BaseActivity {
 
 
         myNick = AppConfig.userNick;
-        setTitle("talk with:" + fromNick);
 
+        voiceRecorder = new AccRecord(handler);
+        wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).
+                newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "demo");
+        initTitle(!TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()));
     }
 
     private void  notifyData()
@@ -114,21 +156,27 @@ public class SpeedActivity extends BaseActivity {
 
     public void onClick(View view)
     {
-        if(true)
-        {
-            sendFileMsg();
-            return;
+        switch (view.getId()) {
+            case R.id.select_picture:// 选择照片
+                selectPicFromLocal();
+                break;
+            case R.id.send_file://发送文件
+                selectFileFromLocal();
+                break;
+            case R.id.send_msg_btn:
+                sendMsg();
+                break;
         }
+    }
+
+    public void sendMsg()
+    {
         if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
         {
             dialogCreatUtil.showSingleBtnDialog(null,getString(R.string.keyIsloss),this);
             return;
         }
-
-
-
-        view.setEnabled(false);
-        TalkBean talkBean = new TalkBean();
+                TalkBean talkBean = new TalkBean();
         talkBean.sendID = AppConfig.clientId;
         talkBean.toID = fromID;
         talkBean.talkContent = editText.getText().toString().trim();
@@ -142,16 +190,16 @@ public class SpeedActivity extends BaseActivity {
         talks.add(talkBean);
 
         notifyData();
-        view.setEnabled(true);
         editText.setText("");
     }
 
-    public void sendFileMsg()
+    public void sendFileMsg(String path)
     {
         TalkBean talkBean = new TalkBean();
         talkBean.sendID = AppConfig.clientId;
         talkBean.toID = fromID;
-        talkBean.talkContent="/sdcard/plane1.png";
+        talkBean.talkContent=path;
+        talkBean.fileType = FileUtils.fliePath2Type(path);
         MyApp.getSingleApp().mySocket.sendFileTalk(talkBean);
         TalkHelper.getSingle().addMySelfTalk(talkBean);
         talks.add(talkBean);
@@ -182,7 +230,7 @@ public class SpeedActivity extends BaseActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent)
         {
-            TalkViewHolder talkViewHolder;
+            final TalkViewHolder talkViewHolder;
             if(convertView  == null )
             {
                 convertView = LayoutInflater.from(SpeedActivity.this)
@@ -194,29 +242,100 @@ public class SpeedActivity extends BaseActivity {
                 talkViewHolder.talk_content = (TextView) convertView.findViewById(R.id.tv_talk_content);
                 talkViewHolder.headLeft = (ImageView)convertView.findViewById(R.id.img_talk_head_left);
                 talkViewHolder.headRight = (ImageView)convertView.findViewById(R.id.img_talk_head_right);
+                talkViewHolder.chat_voice = (ImageView)convertView.findViewById(R.id.chat_voice);
+                talkViewHolder.bg = convertView.findViewById(R.id.ll_bg);
+                talkViewHolder.imgTalk = (ImageView) convertView.findViewById(R.id.iv_img);
             }else
             {
                 talkViewHolder = (TalkViewHolder) convertView.getTag();
             }
-            TalkBean talkBean = talks.get(position);
+            final TalkBean talkBean = talks.get(position);
             if( talkBean.toID == fromID )
             {
                 talkViewHolder.name.setText(myNick);
                 talkViewHolder.linearLayout.setGravity(Gravity.RIGHT);
                 talkViewHolder.talk_content.setText(talkBean.talkContent);
-                talkViewHolder.talk_content.setBackgroundResource(R.drawable.bg_talk_content_right);
+                talkViewHolder.bg.setBackgroundResource(R.drawable.bg_talk_content_right);
                 talkViewHolder.headLeft.setVisibility(View.INVISIBLE);
                 talkViewHolder.headRight.setVisibility(View.VISIBLE);
+
+
             }else
             {
                 talkViewHolder.name.setText(fromNick);
                 talkViewHolder.linearLayout.setGravity(Gravity.LEFT);
                 talkViewHolder.talk_content.setText(talkBean.talkContent);
-                talkViewHolder.talk_content.setBackgroundResource(R.drawable.bg_talk_content_left);
+                talkViewHolder.bg.setBackgroundResource(R.drawable.bg_talk_content_left);
                 talkViewHolder.headLeft.setVisibility(View.VISIBLE);
                 talkViewHolder.headRight.setVisibility(View.INVISIBLE);
             }
+            talkViewHolder.talk_content.setVisibility(View.GONE);
+            talkViewHolder.imgTalk.setVisibility(View.GONE);
+            talkViewHolder.chat_voice.setVisibility(View.GONE);
+
+            switch (talkBean.fileType)
+            {
+                case FileBean.isAAC:
+                    talkViewHolder.chat_voice.setVisibility(View.VISIBLE);
+                    break;
+                case FileBean.isJPE:
+                case FileBean.isPNG:
+                    talkViewHolder.imgTalk.setVisibility(View.VISIBLE);
+                    Bitmap bmp = BitmapFactory.decodeFile(talkBean.talkContent);
+                    talkViewHolder.imgTalk.setImageBitmap(bmp);
+                    break;
+                default:
+                    talkViewHolder.talk_content.setVisibility(View.VISIBLE);
+                    break;
+            }
+
+            talkViewHolder.imgTalk.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(SpeedActivity.this,ImageActivity.class);
+                    intent.putExtra(ImageActivity.PATH,talkBean.talkContent);
+                    startActivity(intent);
+                }
+            });
+
+            talkViewHolder.chat_voice.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Log.e("1234",talkBean.talkContent);
+                    if(isPlaying)
+                    {
+                        stopPlayVoice();
+                    }
+                    mediaPlayer = new MediaPlayer();
+                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
+                    try {
+                        mediaPlayer.setDataSource(talkBean.talkContent);
+                        mediaPlayer.prepare();
+                        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+                                mediaPlayer.release();
+                                mediaPlayer = null;
+                                stopPlayVoice(); // 停止播放动画
+                            }
+
+                        });
+                        isPlaying = true;
+                        mediaPlayer.start();
+
+                    } catch (Exception e) {
+                    }
+                }
+            });
             return convertView;
+        }
+        public void stopPlayVoice() {
+            // 停止播放声音
+            if (mediaPlayer != null) {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+            }
+            isPlaying = false;
         }
     };
 
@@ -259,12 +378,179 @@ public class SpeedActivity extends BaseActivity {
         TextView talk_content;
         ImageView headLeft;
         ImageView headRight;
+        ImageView chat_voice;
+        View bg;
+        ImageView imgTalk;
+    }
+    @Subscribe(threadMode = ThreadMode.MainThread)
+    public void secretKeyChange(SecretKeyBean secretKeyBean)
+    {
+       initTitle(secretKeyBean.secretKeyIsOnLine);
     }
 
+    private void initTitle(boolean secretKeyIsOnLine)
+    {
+        if(!secretKeyIsOnLine)
+        {
+            titleView.setText(R.string.keyIsloss);
+            titleView.setTextColor(Color.RED);
+        }else
+        {
+            setTitle("talk with:" + fromNick);
+            titleView.setTextColor(Color.BLACK);
+        }
+    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
+    }
+
+    /**
+     * 从图库获取图片
+     */
+    public void selectPicFromLocal() {
+        Intent intent;
+        if (Build.VERSION.SDK_INT < 19) {
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+
+        } else {
+            intent = new Intent(
+                    Intent.ACTION_PICK,
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        }
+        startActivityForResult(intent, REQUEST_PICTURE_LOCAL);
+    }
+    /**
+     * 选择文件
+     */
+    private void selectFileFromLocal() {
+        Intent intent = null;
+        try{
+            intent=new Intent(this,FileSelectActivity.class);
+            startActivityForResult(intent,REQUEST_FILE_LOCAL);
+        }catch(Exception e){
+            Toast.makeText(this, "Please install a File Manager.",  Toast.LENGTH_SHORT).show();
+        }
+    }
+    private PowerManager.WakeLock wakeLock;
+    /**
+     * 按住说活
+     */
+    private class PressToSpeackTouchListener implements View.OnTouchListener {
+        private  long         startTime=System.currentTimeMillis();
+        private  boolean      isHavePrivate=true;
+        @Override
+        public boolean onTouch(View view, MotionEvent event) {
+            int action=event.getAction() & MotionEvent.ACTION_MASK;
+            switch (action) {
+                case MotionEvent.ACTION_POINTER_DOWN:
+                case MotionEvent.ACTION_POINTER_UP:
+                    return false;
+                case MotionEvent.ACTION_DOWN:
+                    isHavePrivate=true;
+                    voiceRecorder.discardRecording();
+                    if(System.currentTimeMillis()-startTime<800){
+                        startTime=System.currentTimeMillis();
+                        return false;
+                    }
+                    startTime=System.currentTimeMillis();
+                    if (!FileUtils.isExitsSdcard()) {
+                        String str = getResources().getString(R.string.sd_not_exist);
+                        Toast.makeText(SpeedActivity.this, str, Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+                    try {
+                        view.setPressed(true);
+                        wakeLock.acquire();
+//                        if (PlayVoice.isPlaying)
+//                            PlayVoice.currentPlayListener.stopPlayVoice();
+                        voiceRecorder.startRecording(null, myNick,getApplicationContext());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        view.setPressed(false);
+                        if (wakeLock.isHeld())
+                            wakeLock.release();
+                        if (voiceRecorder != null)
+                            voiceRecorder.discardRecording();
+                        Toast.makeText(SpeedActivity.this, R.string.recoding_fail,Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+                    return true;
+                case MotionEvent.ACTION_MOVE: {
+                    return true;
+                }
+                case MotionEvent.ACTION_UP:
+                    if(isHavePrivate==false)
+                        return false;
+                    if(System.currentTimeMillis()-startTime<300){
+                        startTime=System.currentTimeMillis();
+                        voiceRecorder.discardRecording();
+                        view.setPressed(false);
+                        return false;
+                    }
+                    startTime=System.currentTimeMillis();
+                    view.setPressed(false);
+                    if (wakeLock.isHeld())
+                        wakeLock.release();
+                    if (event.getY() < 0) {
+                        startTime=0;
+                        voiceRecorder.discardRecording();
+                    }else {
+                        String tooShort = getResources().getString(R.string.The_recording_time_is_too_short);
+                        try {
+                            startTime=0;
+                            int length = voiceRecorder.stopRecoding();
+                            if (length > 0) {
+                                sendVoice(voiceRecorder.getVoiceFilePath(),length);
+                            } else if (length ==0) {
+                                Toast.makeText(getApplicationContext(), tooShort,Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getApplicationContext(), tooShort,Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(SpeedActivity.this, tooShort,Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+                    return true;
+                default:
+                    if (voiceRecorder != null)
+                        voiceRecorder.discardRecording();
+                    return false;
+            }
+        }
+    }
+    /**
+     * 发送音频消息
+     */
+    private void sendVoice(String filePath,int voiceLength){
+        TalkBean talkBean = new TalkBean();
+        talkBean.sendID = AppConfig.clientId;
+        talkBean.toID = fromID;
+        talkBean.talkContent=filePath;
+        MyApp.getSingleApp().mySocket.sendFileTalk(talkBean);
+        TalkHelper.getSingle().addMySelfTalk(talkBean);
+        talks.add(talkBean);
+        notifyData();
+    }
+
+    /**
+     * 处理Activity 返回结果
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_PICTURE_LOCAL:
+                if (data == null)
+                    break;
+                Uri imageUri = data.getData();
+                String path = BitmapUtils.getAbsolutePath(imageUri,this);
+                sendFileMsg(path);
+        }
     }
 }

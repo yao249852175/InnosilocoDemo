@@ -27,6 +27,11 @@
                 android:textColor="#666666"
                 android:textSize="20sp"
                 android:layout_height="wrap_content" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/ll_bg"
+                android:orientation="vertical">
             <TextView
                 android:layout_width="wrap_content"
                 android:text="Ron"
@@ -36,6 +41,28 @@
                 android:textColor="#666666"
                 android:textSize="20sp"
                 android:layout_height="wrap_content" />
+             <ImageView
+                 android:layout_width="90dp"
+                 android:id="@+id/iv_img"
+                 android:clickable="true"
+                 android:scaleType="fitCenter"
+                 android:layout_height="90dp" />
+
+                <ImageView
+                    android:id="@+id/chat_voice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:src="@drawable/chat_voice_playing3" />
+
+            </LinearLayout>
+
+            <!--<LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#666666">
+
+                </LinearLayout>-->
         </LinearLayout>
 
 

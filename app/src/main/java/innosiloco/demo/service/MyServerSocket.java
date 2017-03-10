@@ -184,6 +184,7 @@ public class MyServerSocket implements Runnable,MySocket
                     if(user.userID == userBean.userID)
                     {
                         user.userNike = userBean.userNike;
+                        user.key  = userBean.key;
                         hadExit =true;
                         break;
                     }
@@ -204,7 +205,6 @@ public class MyServerSocket implements Runnable,MySocket
                         break;
                     }
                 }
-
             }
             //重新更新一个 用户列表
             sendMsg2All(AppConfig.FriendCode,

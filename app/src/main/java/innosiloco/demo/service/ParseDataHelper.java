@@ -77,21 +77,21 @@ public class ParseDataHelper
                /* byte[] content =AESUtil.decryptArgByte(
                         AESKeyUitl.getSingleton().getDecode_key().getBytes(),talkBean.talkContent.getBytes(utf_8));
                 talkBean.talkContent = new String(content,utf_8);*/
-                if(!TextUtils.isEmpty(AESKeyUitl.getSingleton().getDecode_key()))
-                talkBean.talkContent = AESUtil.decrypt(AESKeyUitl.getSingleton().getDecode_key(),talkBean.talkContent);
+                String decodeKey = AESKeyUitl.getSingleton().getDecode_key(talkBean.sendID);
+                if(!TextUtils.isEmpty(decodeKey) &&
+                        !TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                talkBean.talkContent = AESUtil.decrypt(decodeKey,talkBean.talkContent);
                 RonLog.LogE("解密后:" + talkBean.talkContent);
             }catch (Exception e)
             {
                 e.printStackTrace();
 
             }
-
             return talkBean;
         }catch (Exception e)
         {
             e.printStackTrace();
         }
-
         return null;
     }
 

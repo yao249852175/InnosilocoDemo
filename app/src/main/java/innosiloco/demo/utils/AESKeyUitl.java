@@ -1,5 +1,13 @@
 package innosiloco.demo.utils;
 
+import android.app.Activity;
+import android.text.TextUtils;
+
+import innosiloco.demo.MyApp;
+import innosiloco.demo.R;
+import innosiloco.demo.beans.UserBean;
+import innosiloco.demo.service.ParseDataHelper;
+
 /**
  * Created by Administrator on 2017/3/1.
  */
@@ -9,24 +17,63 @@ public class AESKeyUitl
 
     public final int myvid=1155,mypid=22336;
 
-    private String decode_key = "ron";
+    private String decode_key = "";
 
-    private String encode_key = "ron";
+    private String encode_key = "";
 
-    public String getDecode_key() {
-        return decode_key;
+    public String getDecode_key(byte fromClientID)
+    {
+        for (UserBean userBean: ParseDataHelper.onlineUser)
+        {
+            if(userBean.userID == fromClientID)
+            {
+                return userBean.key;
+            }
+        }
+        return "";
     }
 
-    public void setDecode_key(String decode_key) {
-        this.decode_key = decode_key;
+    /********
+     * 设置解码key
+     * <p></p>
+     * @param decode_key
+     */
+    public void setDecode_key(String decode_key)
+    {
+        if(!this.encode_key.equals(decode_key))
+        {
+            this.decode_key = decode_key;
+            if(!TextUtils.isEmpty(decode_key))
+            {
+                UserBean userBean = new UserBean();
+                userBean.key = decode_key;
+                userBean.userNike = AppConfig.userNick;
+                userBean.userID = AppConfig.clientId;
+                MyApp.getSingleApp().mySocket.updateUser(userBean);
+            }
+
+        }
     }
 
-    public String getEncode_key() {
+    public String getEncode_key()
+    {
         return encode_key;
     }
 
-    public void setEncode_key(String encode_key) {
-        this.encode_key = encode_key;
+    /*********
+     * 设置加密key
+     * @return
+     */
+    public boolean setEncode_key(String encode_key)
+    {
+        if(encode_key.equals(this.encode_key))
+        {
+            return false;
+        }else
+        {
+            this.encode_key = encode_key;
+            return true;
+        }
     }
 
 
@@ -45,5 +92,22 @@ public class AESKeyUitl
         return aesKeyUitl;
     }
 
+    /**********
+     * 检查 key是否满足要求
+     * @param key
+     */
+    public boolean checkKey(String key)
+    {
+       String[] keys =  MyApp.getSingleApp().getResources()
+               .getStringArray(R.array.KeyArray);
+        for (String a : keys)
+        {
+            if(a.equals(key))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

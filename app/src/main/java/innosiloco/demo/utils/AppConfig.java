@@ -85,5 +85,5 @@ public class AppConfig
      */
     public  static String endWith = "$_@-";
 
-    public static final long maxSendFIleLength = 90*1024;
+    public static final int maxSendFIleLength = 90*1024;
 }

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
@@ -15,4 +17,12 @@
     <color name="red">#ff0000</color>
     <color name="dialog_bg_color">#eeeeee</color>
     <color name="dialog_btn_font_color">#007aff</color>
+    <color name="item_desc_txt_color">#808080</color>
+    <color name="title_bar_color">#18b4ed</color>
+    <color name="base_down_color">#18A4D8</color>
+    <color name="txt_down_color">#f5f8fb</color>
+    <color name="disable_color">#8cdaf6</color>
+    <color name="item_donw_color">#f7f7f7</color>
+    <color name="divider_color">#dedfe0</color>
+    <color name="base_list_bg_color">#f8f9fa</color>
 </resources>

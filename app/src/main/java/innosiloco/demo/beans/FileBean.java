@@ -29,6 +29,8 @@ public class FileBean
 
     public static final byte isPNG = 0x06;
 
+    public static final byte isAAC = 0x07;
+
     /****************
      * 当前的数据类型
      */

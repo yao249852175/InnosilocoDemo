@@ -103,7 +103,7 @@ public class MyClientSocket implements Runnable,MySocket
     @Override
     public void sendFileTalk(TalkBean talkBean) {
         byte type = FileUtils.fliePath2Type(talkBean.talkContent);
-        if(type == FileBean.isMp3 )
+        if(type == FileBean.isMp3 || type == FileBean.isAAC )
         {
             File file = new File(talkBean.talkContent);
             if(file.isFile() && file.length() > AppConfig.maxSendFIleLength)
@@ -121,7 +121,6 @@ public class MyClientSocket implements Runnable,MySocket
             {
                 talkBean.talkContent = BitmapUtils.compressBitmap(BitmapFactory.decodeFile(file.getPath()));
             }
-
             socketThread.addFileMsg(talkBean.talkContent,talkBean.sendID,talkBean.toID);
         }
     }

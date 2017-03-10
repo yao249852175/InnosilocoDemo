@@ -15,7 +15,35 @@
     <string name="name_Server">服务端</string>
     <string name="name_Client">客户端</string>
 
-    <string name="keyIsloss">lose security key</string>
+    <string name="keyIsloss">Lose Security Key</string>
 
     <string name="uploadFileIsBig">上传文件太大</string>
+
+    <string name="Label_onLine">在线列表</string>
+
+    <array name="KeyArray">
+        <item>helloworld</item>
+        <item>ron</item>
+    </array>
+
+
+    <string name="button_pushtotalk">按住说话</string>
+    <string name="button_send">发送</string>
+    <string name="empty_string"></string>
+    <string name="picture">图片</string>
+    <string name="file">文件</string>
+    <string name="ext_sd">扩展卡内存</string>
+    <string name="phone_memory">手机内存</string>
+    <string name="sdk">SD卡</string>
+    <string name="today">今天</string>
+    <string name="yesterday">昨天</string>
+    <string name="year">年</string>
+    <string name="month">月</string>
+    <string name="day">日</string>
+    <string name="sd_not_exist">sd卡不存在</string>
+    <string name="recoding_fail">录音失败，请重试！</string>
+    <string name="The_recording_time_is_too_short">录音时间太短</string>
+
+    <string name="Label_Image">图片</string>
+    <string name="Label_ACC">语音</string>
 </resources>

@@ -214,7 +214,7 @@ public class SocketThread
         @Override
         public void run()
         {
-            byte[] recData = new byte[204800];
+            byte[] recData = new byte[409600];
             int index = 0;
             byte data = 0;
             try {
@@ -369,6 +369,7 @@ public class SocketThread
 
         TalkBean talkBean = new TalkBean();
         talkBean.sendID = data[3];
+        talkBean.fileType = fileType;
         talkBean.toID = data[1];
         talkBean.talkContent = file.getPath();
 
@@ -415,8 +416,9 @@ public class SocketThread
     private void sendFile(byte fromID,byte toID,String path,OutputStream outputStream)
     {
         File file = new File(path);
-        if(file.length() > 90* 1024 || !file.isFile())
+        if(file.length() > 200* 1024 || !file.isFile())
         {
+            RonLog.LogE("发送的文件太大" + file.length());
             return;
         }
         byte fileType =FileUtils.fliePath2Type(path);

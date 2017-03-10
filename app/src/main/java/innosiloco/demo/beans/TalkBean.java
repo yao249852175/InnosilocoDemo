@@ -20,4 +20,6 @@ public class TalkBean
      */
     public String talkContent;
 
+    public byte fileType;
+
 }

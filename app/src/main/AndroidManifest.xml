@@ -42,6 +42,10 @@
         <activity android:name=".mvp_view.UserInfoActivity"
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Light.NoTitleBar"/>
+
+        <activity android:name=".mvp_view.ImageActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Light.NoTitleBar"/>
     </application>
 
 </manifest>

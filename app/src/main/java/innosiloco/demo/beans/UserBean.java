@@ -8,4 +8,5 @@ public class UserBean
     public byte userID;
     public String userNike;
     public String clientIp;
+    public String key;
 }

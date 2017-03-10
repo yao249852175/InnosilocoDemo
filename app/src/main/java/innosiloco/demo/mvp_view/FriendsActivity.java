@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
@@ -25,12 +26,15 @@ import android.widget.Toast;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import de.greenrobot.event.EventBus;
 import de.greenrobot.event.Subscribe;
 import de.greenrobot.event.ThreadMode;
 import innosiloco.demo.MyApp;
 import innosiloco.demo.R;
 import innosiloco.demo.beans.EventDownLine;
 import innosiloco.demo.beans.EventFriendListUpdate;
+import innosiloco.demo.beans.FileBean;
+import innosiloco.demo.beans.SecretKeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.service.ParseDataHelper;
@@ -46,7 +50,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
      */
     public final int LookTalks = 1;
 
-    private TextView textView;
+    private TextView titleView;
 
     private ListView listView;
 
@@ -61,6 +65,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     boolean threadcontrol_mt=false;
     boolean threadsenddata=false;
 
+    TextView textView;
 
     UsbInterface[] usbinterface=null;
     UsbEndpoint[][] endpoint=new UsbEndpoint[5][5];
@@ -70,6 +75,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     public void findViews() {
         listView = (ListView) findViewById(R.id.list_friends);
         textView = (TextView) findViewById(R.id.test);
+        titleView= (TextView)findViewById(R.id.tv_head_title);
     }
 
     private final static String ACTION ="android.hardware.usb.action.USB_STATE";
@@ -81,7 +87,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     public void initViews()
     {
         listView.setAdapter(friendListAdapter);
-        setTitle("在线列表");
+        setTitleAndColor(true);
         IntentFilter filter = new IntentFilter(ACTION1);
         filter.addAction(ACTION_USB_PERMISSION);
 //        filter.addAction(ACTION1);
@@ -159,7 +165,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     private void beginCheckDevice()
     {
         //检查权限
-
+        setTitleAndColor(true);
         new Thread(runnable).start();
     }
 
@@ -186,14 +192,14 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     }
                     handler.obtainMessage(1,"检测到设备了").sendToTarget();
                     threadcontrol_ct=true;
-
-
                     break;
                 }else
                 {
-                    try {
+                    try
+                    {
                         Thread.sleep(1000);
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException e)
+                    {
                         e.printStackTrace();
                     }
                 }
@@ -268,14 +274,28 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             {
                 RonLog.LogE("lastContent:"+ talkBean.talkContent);
                 friendViewHolder.speedNum.setVisibility(View.VISIBLE);
-                friendViewHolder.lastSpeed.setText(talkBean.talkContent);
+
+
+                switch (talkBean.fileType)
+                {
+                    case FileBean.isMp3:
+                    case FileBean.isAAC:
+                        friendViewHolder.lastSpeed.setText(R.string.Label_ACC);
+                        break;
+                    case FileBean.isJPE:
+                    case FileBean.isPNG:
+                        friendViewHolder.lastSpeed.setText(R.string.Label_Image);
+                        break;
+                    default:
+                        friendViewHolder.lastSpeed.setText(talkBean.talkContent);
+                        break;
+                }
                 friendViewHolder.speedNum.setText(""+TalkHelper.getSingle().getOnceTalk(userBean.userID).talks.size());
             }else
             {
                 friendViewHolder.lastSpeed.setText("");
                 friendViewHolder.speedNum.setVisibility(View.GONE);
             }
-
             return convertView;
         }
     };
@@ -326,6 +346,20 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         friendListAdapter.notifyDataSetChanged();
     }
 
+    private void setTitleAndColor(boolean isWarn)
+    {
+        EventBus.getDefault().post(new SecretKeyBean(!isWarn));
+        if(isWarn)
+        {
+            titleView.setText(R.string.keyIsloss);
+            titleView.setTextColor(Color.RED);
+        }else
+        {
+            titleView.setText(R.string.Label_onLine);
+            titleView.setTextColor(Color.BLACK);
+        }
+    }
+
     private Handler handler = new Handler()
     {
         @Override
@@ -340,7 +374,11 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     if(!AppConfig.isTest)
                     {//收到了，设备发来的key
                         AESKeyUitl.getSingleton().setDecode_key("ron");
-                        AESKeyUitl.getSingleton().setEncode_key("ron");
+                        boolean setSuccess = AESKeyUitl.getSingleton().setEncode_key("ron");
+                        if(setSuccess)
+                        {
+                            setTitleAndColor(false);
+                        }
                     }
                     textView.setText(msg.obj.toString());
                     break;
