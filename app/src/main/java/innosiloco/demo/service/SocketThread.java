@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +24,7 @@ import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
+import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.FileUtils;
 import innosiloco.demo.utils.RonLog;
@@ -286,6 +288,7 @@ public class SocketThread
                         break;
                     case AppConfig.FriendCode:
                         //有人 下线
+                        RonLog.LogD(new String(frameBean.content));
                         ParseDataHelper.onlineUser = ParseDataHelper.jsonFriendList(new String(frameBean.content));
                         EventBus.getDefault().post(new EventFriendListUpdate());
                         break;
@@ -313,6 +316,7 @@ public class SocketThread
                     case AppConfig.UserInfoCode:
                         //用户上线 和 设置用信息
                         UserBean userBean = ParseDataHelper.json2Friend(new String(frameBean.content));
+                        RonLog.LogD(new String(frameBean.content));
                         userBean.userID = clientId;
                         RonLog.LogE("userNick:" + userBean.userNike + ",ip:"+ userBean.clientIp);
                         if(clientIsAliveListener != null )
@@ -348,30 +352,38 @@ public class SocketThread
                 fileName += ".mp3";
                 break;
         }
-
-        File file =new File(AppConfig.BaseDirectory + fileName);
-        if(!file.getParentFile().exists())
-        {
-           boolean b=  file.getParentFile().mkdirs();
-            RonLog.LogE("创建文件夹失败:" +b+ file.getParentFile().getPath());
-        }
-
-        if(file.exists())
-        {
-            file.delete();
-        }
-
-        file.createNewFile();
-        OutputStream outputStream = new FileOutputStream(file);
-        outputStream.write(data,5,length - 5);
-        outputStream.flush();
-        outputStream.close();
-
         TalkBean talkBean = new TalkBean();
+        if(!AppConfig.isTest && TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+        {
+            talkBean.talkContent = "";
+        }else {
+            File file =new File(AppConfig.BaseDirectory + fileName);
+            if(!file.getParentFile().exists())
+            {
+                boolean b=  file.getParentFile().mkdirs();
+                RonLog.LogE("创建文件夹失败:" +b+ file.getParentFile().getPath());
+            }
+
+            if(file.exists())
+            {
+                file.delete();
+            }
+
+            file.createNewFile();
+            OutputStream outputStream = new FileOutputStream(file);
+            outputStream.write(data,5,length - 5);
+            outputStream.flush();
+            outputStream.close();
+            talkBean.talkContent = file.getPath();
+        }
+
+
+
+
         talkBean.sendID = data[3];
         talkBean.fileType = fileType;
         talkBean.toID = data[1];
-        talkBean.talkContent = file.getPath();
+
 
         TalkHelper.getSingle().addTalk( talkBean );
         EventBus.getDefault().post(talkBean);

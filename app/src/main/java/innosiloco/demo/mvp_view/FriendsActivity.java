@@ -146,15 +146,16 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             // TODO Auto-generated method stub
             int datalength;
             while(threadcontrol_ct){
-                if(threadsenddata){
+                /*if(threadsenddata){
                     threadsenddata=false;
+                    //TODO 发送的数据
                     byte[] mytmpbyte= "helloworld".getBytes();
                     connection.bulkTransfer(endpoint[1][0], mytmpbyte, mytmpbyte.length, 30);
-                }
+                }*/
                 datalength=connection.bulkTransfer(endpoint[1][1], mybuffer, 1024, 30);
 //                mydatatransfer.AddData(mybuffer, datalength);
                 if(datalength>=0){
-                    handler.obtainMessage(1,new String(mybuffer) + ":"+ a++).sendToTarget();
+                    handler.obtainMessage(1,new String(mybuffer).trim() ).sendToTarget();
                 }
             }
         }
@@ -190,7 +191,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     {
                         manager.requestPermission(device, mPermissionIntent);
                     }
-                    handler.obtainMessage(1,"检测到设备了").sendToTarget();
+//                    handler.obtainMessage(1,"检测到设备了").sendToTarget();
                     threadcontrol_ct=true;
                     break;
                 }else
@@ -373,8 +374,8 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                 case 1:
                     if(!AppConfig.isTest)
                     {//收到了，设备发来的key
-                        AESKeyUitl.getSingleton().setDecode_key("ron");
-                        boolean setSuccess = AESKeyUitl.getSingleton().setEncode_key("ron");
+//                        AESKeyUitl.getSingleton().setDecode_key("ron");
+                        boolean setSuccess = AESKeyUitl.getSingleton().setEncode_key(msg.obj.toString());
                         if(setSuccess)
                         {
                             setTitleAndColor(false);

@@ -36,7 +36,6 @@
                 android:layout_width="wrap_content"
                 android:text="Ron"
                 android:id="@+id/tv_talk_content"
-                android:background="@drawable/bg_talk_content_left"
                 android:padding="@dimen/activity_vertical_margin"
                 android:textColor="#666666"
                 android:textSize="20sp"

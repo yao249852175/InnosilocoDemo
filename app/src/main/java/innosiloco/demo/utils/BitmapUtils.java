@@ -26,19 +26,30 @@ public class BitmapUtils
 {
     public static String compressBitmap(Bitmap bitmap)
     {
-       /* Bitmap bitmap1 = ThumbnailUtils.extractThumbnail(bitmap,300,300);
-        return saveBitmap(bitmap1);*/
-        File f = new File(AppConfig.BaseDirectory, System.currentTimeMillis()+".jpg");
-        if (f.exists()) {
-            f.delete();
+        int widht = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        int max = 300;
+        int scale = 1;
+        if(widht >height)
+        {
+            if(widht > max )
+            {
+                scale = widht/max + 1;
+            }
+        }else
+        {
+            if(height > max )
+            {
+                scale = height/max + 1;
+            }
         }
-        try {
-            compressAndGenImage(bitmap,f.getPath(),AppConfig.maxSendFIleLength);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "";
-        }
-        return f.getPath();
+
+        Bitmap bitmap1 = ThumbnailUtils.extractThumbnail(bitmap,widht/scale,height/scale);
+        return saveBitmap(bitmap1);
+
+
+
+
     }
 
     /**
@@ -49,18 +60,26 @@ public class BitmapUtils
      * @param maxSize target will be compressed to be smaller than this size.(kb)
      * @throws IOException
      */
-    public static void compressAndGenImage(Bitmap image, String outPath, int maxSize) throws IOException {
+    public static boolean compressAndGenImage(Bitmap image, String outPath, int maxSize) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         // scale
         int options = 100;
         // Store the bitmap into output stream(no compress)
         image.compress(Bitmap.CompressFormat.JPEG, options, os);
         // Compress by loop
-        while ( os.toByteArray().length / 1024 > maxSize) {
+        while ( os.toByteArray().length  > maxSize) {
             // Clean up os
+            if(options == 1)
+            {
+                return false;
+            }
             os.reset();
             // interval 10
             options -= 10;
+            if(options < 10)
+            {
+                options = 1;
+            }
             image.compress(Bitmap.CompressFormat.JPEG, options, os);
         }
 
@@ -69,6 +88,7 @@ public class BitmapUtils
         fos.write(os.toByteArray());
         fos.flush();
         fos.close();
+        return true;
     }
 
     /** 保存方法 */

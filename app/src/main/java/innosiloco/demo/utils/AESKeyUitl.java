@@ -17,9 +17,9 @@ public class AESKeyUitl
 
     public final int myvid=1155,mypid=22336;
 
-    private String decode_key = "";
+    private String decode_key = "hello world";
 
-    private String encode_key = "";
+    private String encode_key = "hello world";
 
     public String getDecode_key(byte fromClientID)
     {
@@ -40,19 +40,7 @@ public class AESKeyUitl
      */
     public void setDecode_key(String decode_key)
     {
-        if(!this.encode_key.equals(decode_key))
-        {
-            this.decode_key = decode_key;
-            if(!TextUtils.isEmpty(decode_key))
-            {
-                UserBean userBean = new UserBean();
-                userBean.key = decode_key;
-                userBean.userNike = AppConfig.userNick;
-                userBean.userID = AppConfig.clientId;
-                MyApp.getSingleApp().mySocket.updateUser(userBean);
-            }
-
-        }
+        this.decode_key = decode_key;
     }
 
     public String getEncode_key()
@@ -72,6 +60,14 @@ public class AESKeyUitl
         }else
         {
             this.encode_key = encode_key;
+            if(!TextUtils.isEmpty(encode_key))
+            {
+                UserBean userBean = new UserBean();
+                userBean.key = encode_key;
+                userBean.userNike = AppConfig.userNick;
+                userBean.userID = AppConfig.clientId;
+                MyApp.getSingleApp().mySocket.updateUser(userBean);
+            }
             return true;
         }
     }

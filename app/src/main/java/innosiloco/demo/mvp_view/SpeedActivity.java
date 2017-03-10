@@ -81,7 +81,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
      * 客户端的Nick
      */
     private String myNick;
-    private final int REQUEST_PICTURE_LOCAL = 1;
+    public static final int REQUEST_PICTURE_LOCAL = 1;
     private final int REQUEST_FILE_LOCAL=3;
     public static final int  	AUDIO_STATUS=2;
     private AccRecord voiceRecorder;
@@ -281,8 +281,15 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 case FileBean.isJPE:
                 case FileBean.isPNG:
                     talkViewHolder.imgTalk.setVisibility(View.VISIBLE);
-                    Bitmap bmp = BitmapFactory.decodeFile(talkBean.talkContent);
-                    talkViewHolder.imgTalk.setImageBitmap(bmp);
+                    if(TextUtils.isEmpty(talkBean.talkContent))
+                    {
+                        talkViewHolder.imgTalk.setImageResource(R.drawable.dud);
+                    }else
+                    {
+                        Bitmap bmp = BitmapFactory.decodeFile(talkBean.talkContent);
+                        talkViewHolder.imgTalk.setImageBitmap(bmp);
+                    }
+
                     break;
                 default:
                     talkViewHolder.talk_content.setVisibility(View.VISIBLE);

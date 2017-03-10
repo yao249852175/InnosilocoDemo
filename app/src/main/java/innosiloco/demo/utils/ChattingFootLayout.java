@@ -4,8 +4,10 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.text.Editable;
@@ -27,6 +29,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import innosiloco.demo.R;
+import innosiloco.demo.mvp_view.SpeedActivity;
 
 /**
  * 
@@ -192,9 +195,9 @@ public class ChattingFootLayout extends LinearLayout implements View.OnClickList
 			break;
 		case R.id.more_btn:
 			((Activity)context).getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
-			moreLayout.setVisibility(VISIBLE);
-			setEditVisible();
-			if(isMoreChecked==true){
+			/*moreLayout.setVisibility(VISIBLE);
+			setEditVisible();*/
+			/*if(isMoreChecked==true){
 				editRequireFoucus();
 				moreBtn.setFocusable(false);
 				showKeyboard(msgEdt);
@@ -213,10 +216,28 @@ public class ChattingFootLayout extends LinearLayout implements View.OnClickList
 			}
 			isMoreChecked=!isMoreChecked;
 			isEmojiChecked=false;
-			faceListLayout.setVisibility(GONE);
+			faceListLayout.setVisibility(GONE);*/
 			hideKeyboard();
+			selectPicFromLocal((Activity) context);
 			break;
 		}
+	}
+
+	/**
+	 * 从图库获取图片
+	 */
+	public void selectPicFromLocal(Activity context) {
+		Intent intent;
+		if (Build.VERSION.SDK_INT < 19) {
+			intent = new Intent(Intent.ACTION_GET_CONTENT);
+			intent.setType("image/*");
+
+		} else {
+			intent = new Intent(
+					Intent.ACTION_PICK,
+					android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+		}
+		context.startActivityForResult(intent, SpeedActivity.REQUEST_PICTURE_LOCAL);
 	}
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,long id) {
