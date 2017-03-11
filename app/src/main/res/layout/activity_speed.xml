@@ -6,9 +6,10 @@
     android:layout_height="match_parent">
     <include layout="@layout/layout_head"/>
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical">
     <ListView
         android:layout_width="match_parent"
@@ -18,51 +19,24 @@
         android:layout_weight="1"
         android:divider="@android:color/transparent"
         android:dividerHeight="1dp"
-        android:layout_height="wrap_content"/>
-        <!--
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/height_edit"
-        android:gravity="center"
-        android:layout_marginLeft="@dimen/activity_vertical_margin"
-        android:layout_marginRight="@dimen/activity_vertical_margin"
-        android:layout_marginBottom="@dimen/activity_vertical_margin"
-        android:orientation="horizontal">
-        <Button
-            android:id="@+id/voice_mode_btn"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginRight="10dp"
-            android:background="@drawable/chatting_setmode_voice_btn"
-            android:visibility="visible" />
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_weight="1"
-            android:paddingLeft="@dimen/activity_vertical_margin"
-            android:id="@+id/edit_talk"
-            android:paddingRight="@dimen/activity_vertical_margin"
-            android:background="@drawable/bg_edit_talk"
-            android:layout_height="@dimen/height_edit" />
+        android:layout_height="match_parent"/>
 
-        <Button
-            android:layout_width="wrap_content"
-            android:textColor="@color/colorWhite"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
-            android:layout_marginLeft="5dp"
-            android:textSize="18sp"
-            android:onClick="onClick"
-            android:text="发送"
-            android:background="@drawable/bg_send"
-            android:layout_height="match_parent" />
-    </LinearLayout>
-        -->
+        <ImageView
+            android:layout_width="160dp"
+            android:id="@+id/img_speead_anim"
+            android:layout_gravity="center_horizontal|bottom"
+            android:background="@drawable/anim_speed"
+            android:visibility="gone"
+            android:layout_marginBottom="50dp"
+            android:layout_height="160dp" />
+
+    </FrameLayout>
         <include
             android:id="@+id/chat_input_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             layout="@layout/chat_foot_layout"
             android:visibility="visible" />
-    </LinearLayout>
+
 
 </LinearLayout>

@@ -38,6 +38,9 @@ public class FileUtils
         }
         return 0;
     }
+
+
+
     /**
      * 检测Sdcard是否存在
      */

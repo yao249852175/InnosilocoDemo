@@ -1,16 +1,21 @@
 package innosiloco.demo.mvp_view;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.AnimationDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -18,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -46,6 +52,7 @@ import innosiloco.demo.utils.AccRecord;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.BitmapUtils;
 import innosiloco.demo.utils.FileUtils;
+import innosiloco.demo.utils.Mp3Util;
 import innosiloco.demo.utils.RonLog;
 import innosiloco.demo.utils.TalkHelper;
 
@@ -64,9 +71,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
     public static final String TalkFromNick = "TalkFromNick";
 
     private List<TalkBean> talks;
-    private MediaPlayer mediaPlayer = null;
-    //标示是否在播放
-    public static boolean    		isPlaying = false;
+
     /********************
      * 发送者的ID号
      */
@@ -84,7 +89,6 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
     public static final int REQUEST_PICTURE_LOCAL = 1;
     private final int REQUEST_FILE_LOCAL=3;
     public static final int  	AUDIO_STATUS=2;
-    private AccRecord voiceRecorder;
     private Handler handler=new Handler() {
         public void handleMessage(android.os.Message msg) {
 
@@ -94,6 +98,12 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
      * 编辑聊天内容
      */
     private EditText editText;
+
+    private ImageView img_anim;
+
+
+    private Mp3Util mp3Util;
+
     @Override
     public void findViews()
     {
@@ -103,11 +113,14 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
         findViewById(R.id.press_to_speak_btn).setOnTouchListener(new PressToSpeackTouchListener());
         editText = (EditText) findViewById(R.id.message_edt);
         titleView = (TextView)findViewById(R.id.tv_head_title);
+        img_anim = (ImageView)findViewById(R.id.img_speead_anim);
     }
 
     @Override
     public void initViews()
-    {   talks = new ArrayList<>();
+    {
+        mp3Util = new Mp3Util(img_anim);
+        talks = new ArrayList<>();
         listView.setAdapter(baseAdapter);
         fromID = getIntent().getByteExtra(TalkFromID,(byte)-1);
         fromNick = getIntent().getStringExtra(TalkFromNick);
@@ -120,7 +133,6 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
         myNick = AppConfig.userNick;
 
-        voiceRecorder = new AccRecord(handler);
         wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).
                 newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "demo");
         initTitle(!TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()));
@@ -211,6 +223,8 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
         return R.layout.activity_speed;
     }
 
+
+
     private BaseAdapter baseAdapter = new BaseAdapter() {
         @Override
         public int getCount() {
@@ -276,6 +290,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
             switch (talkBean.fileType)
             {
                 case FileBean.isAAC:
+                    case FileBean.isMp3:
                     talkViewHolder.chat_voice.setVisibility(View.VISIBLE);
                     break;
                 case FileBean.isJPE:
@@ -289,7 +304,6 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                         Bitmap bmp = BitmapFactory.decodeFile(talkBean.talkContent);
                         talkViewHolder.imgTalk.setImageBitmap(bmp);
                     }
-
                     break;
                 default:
                     talkViewHolder.talk_content.setVisibility(View.VISIBLE);
@@ -307,43 +321,14 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
             talkViewHolder.chat_voice.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view) {
-                    Log.e("1234",talkBean.talkContent);
-                    if(isPlaying)
-                    {
-                        stopPlayVoice();
-                    }
-                    mediaPlayer = new MediaPlayer();
-                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
-                    try {
-                        mediaPlayer.setDataSource(talkBean.talkContent);
-                        mediaPlayer.prepare();
-                        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                            @Override
-                            public void onCompletion(MediaPlayer mp) {
-                                mediaPlayer.release();
-                                mediaPlayer = null;
-                                stopPlayVoice(); // 停止播放动画
-                            }
-
-                        });
-                        isPlaying = true;
-                        mediaPlayer.start();
-
-                    } catch (Exception e) {
-                    }
+                public void onClick(View view)
+                {
+                    mp3Util.playMp3(talkBean.talkContent,talkViewHolder.chat_voice);
                 }
             });
             return convertView;
         }
-        public void stopPlayVoice() {
-            // 停止播放声音
-            if (mediaPlayer != null) {
-                mediaPlayer.stop();
-                mediaPlayer.release();
-            }
-            isPlaying = false;
-        }
+
     };
 
     /*******************
@@ -443,6 +428,27 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
         }
     }
     private PowerManager.WakeLock wakeLock;
+
+    /**************
+     * 检查路线的权限
+     * @return
+     */
+    private boolean checkRecorderPermission()
+    {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO,
+                            },
+                    0);
+            return false;
+        }else
+        {
+            return true;
+        }
+    }
     /**
      * 按住说活
      */
@@ -457,8 +463,12 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 case MotionEvent.ACTION_POINTER_UP:
                     return false;
                 case MotionEvent.ACTION_DOWN:
+                    if(!checkRecorderPermission())
+                    {
+                        return false;
+                    }
                     isHavePrivate=true;
-                    voiceRecorder.discardRecording();
+                    mp3Util.recorderErr();
                     if(System.currentTimeMillis()-startTime<800){
                         startTime=System.currentTimeMillis();
                         return false;
@@ -474,14 +484,13 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                         wakeLock.acquire();
 //                        if (PlayVoice.isPlaying)
 //                            PlayVoice.currentPlayListener.stopPlayVoice();
-                        voiceRecorder.startRecording(null, myNick,getApplicationContext());
+                        mp3Util.beginRecorder();
                     } catch (Exception e) {
                         e.printStackTrace();
                         view.setPressed(false);
                         if (wakeLock.isHeld())
                             wakeLock.release();
-                        if (voiceRecorder != null)
-                            voiceRecorder.discardRecording();
+                        mp3Util.recorderErr();
                         Toast.makeText(SpeedActivity.this, R.string.recoding_fail,Toast.LENGTH_SHORT).show();
                         return false;
                     }
@@ -494,7 +503,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                         return false;
                     if(System.currentTimeMillis()-startTime<300){
                         startTime=System.currentTimeMillis();
-                        voiceRecorder.discardRecording();
+                        mp3Util.recorderErr();
                         view.setPressed(false);
                         return false;
                     }
@@ -504,14 +513,14 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                         wakeLock.release();
                     if (event.getY() < 0) {
                         startTime=0;
-                        voiceRecorder.discardRecording();
+                        mp3Util.recorderErr();
                     }else {
                         String tooShort = getResources().getString(R.string.The_recording_time_is_too_short);
                         try {
                             startTime=0;
-                            int length = voiceRecorder.stopRecoding();
+                            int length = (int)mp3Util.stopRecorder();
                             if (length > 0) {
-                                sendVoice(voiceRecorder.getVoiceFilePath(),length);
+                                sendVoice(mp3Util.getSavaPath(),length);
                             } else if (length ==0) {
                                 Toast.makeText(getApplicationContext(), tooShort,Toast.LENGTH_SHORT).show();
                             } else {
@@ -525,8 +534,8 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                     }
                     return true;
                 default:
-                    if (voiceRecorder != null)
-                        voiceRecorder.discardRecording();
+                    if (mp3Util != null)
+                         mp3Util.recorderErr();
                     return false;
             }
         }
@@ -539,6 +548,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
         talkBean.sendID = AppConfig.clientId;
         talkBean.toID = fromID;
         talkBean.talkContent=filePath;
+        talkBean.fileType = FileBean.isMp3;
         MyApp.getSingleApp().mySocket.sendFileTalk(talkBean);
         TalkHelper.getSingle().addMySelfTalk(talkBean);
         talks.add(talkBean);

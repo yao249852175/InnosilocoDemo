@@ -30,6 +30,7 @@ import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.service.MyClientSocket;
 import innosiloco.demo.service.MyServerSocket;
 import innosiloco.demo.service.ParseDataHelper;
+import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.RonLog;
 import innosiloco.demo.utils.WifiUtil;
@@ -235,6 +236,10 @@ public class SplashActivty extends BaseActivity
             userBean.userNike = getResources().getString(R.string.name_Client);
         userBean.userID = AppConfig.clientId;
         AppConfig.userNick = userBean.userNike;
+        if(AppConfig.isTest)
+        {
+            userBean.key = AESKeyUitl.getSingleton().getEncode_key();
+        }
         MyApp.getSingleApp().mySocket.updateUser(userBean);;
     }
 
