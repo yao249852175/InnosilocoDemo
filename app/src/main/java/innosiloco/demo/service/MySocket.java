@@ -1,6 +1,9 @@
 package innosiloco.demo.service;
 
+import java.security.Key;
+
 import innosiloco.demo.beans.ICallback;
+import innosiloco.demo.beans.KeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 
@@ -27,5 +30,8 @@ public interface MySocket
 
     public void sendFileTalk(TalkBean talkBean);
 
+    public void sendKey2ServerCheckKey(KeyBean keyBean);
+
+    public void sendCheckKeyResult(KeyBean keyBean);
 
 }

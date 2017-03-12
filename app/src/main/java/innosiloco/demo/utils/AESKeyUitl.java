@@ -17,9 +17,9 @@ public class AESKeyUitl
 
     public final int myvid=1155,mypid=22336;
 
-    private String decode_key = "hello world";
+    private String decode_key = "";
 
-    private String encode_key = "hello world";
+    private String encode_key = "";
 
     public String getDecode_key(byte fromClientID)
     {
@@ -88,22 +88,5 @@ public class AESKeyUitl
         return aesKeyUitl;
     }
 
-    /**********
-     * 检查 key是否满足要求
-     * @param key
-     */
-    public boolean checkKey(String key)
-    {
-       String[] keys =  MyApp.getSingleApp().getResources()
-               .getStringArray(R.array.KeyArray);
-        for (String a : keys)
-        {
-            if(a.equals(key))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 
 }

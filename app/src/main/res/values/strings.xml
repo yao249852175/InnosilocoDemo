@@ -23,7 +23,7 @@
 
     <array name="KeyArray">
         <item>helloworld</item>
-        <item>ron</item>
+        <item>ZBZBZBZBZBZBZBZBZBZBZBZBZBZBZBZB</item>
     </array>
 
 
@@ -46,4 +46,18 @@
 
     <string name="Label_Image">图片</string>
     <string name="Label_ACC">语音</string>
+
+    <string name="Label_Client_begin">开始发生配对请求</string>
+    <string name="Label_Client_Checking">正在配对...</string>
+    <string name="Label_Client_CheckErr">服务器拒绝配对</string>
+    <string name="Label_Client_CheckSuccess">配对成功</string>
+    <string name="Label_CheckKey_ErrPuf">该设备不符合puf行为,</string>
+    <string name="Label_CheckKey_SuccessPuf">该设备符合puf行为</string>
+
+    <string name="Label_Server_Begin">检测到配对请求</string>
+    <string name="Label_Server_CheckErr">不信任设备，配对失败</string>
+    <string name="Label_Server_CheckSuccess">配对成功</string>
+    <string name="Label_FriendList">在线列表</string>
+
+    <string name="Label_HadInsertSqlite">注册成功</string>
 </resources>

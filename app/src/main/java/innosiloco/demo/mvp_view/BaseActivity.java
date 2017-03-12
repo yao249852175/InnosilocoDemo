@@ -98,7 +98,7 @@ public abstract class BaseActivity extends Activity
 
     public void onHeadBack(View v)
     {
-        this.finish();
+        exit();
     }
 
     /**

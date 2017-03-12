@@ -1,5 +1,6 @@
 package innosiloco.demo.service;
 
+import android.database.DatabaseUtils;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -22,8 +23,11 @@ import innosiloco.demo.beans.EventDownLine;
 import innosiloco.demo.beans.EventFriendListUpdate;
 import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
+import innosiloco.demo.beans.KeyBean;
+import innosiloco.demo.beans.KeyCheckEvent;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
+import innosiloco.demo.mvp_presenter.DataKeyUtil;
 import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.FileUtils;
@@ -323,7 +327,23 @@ public class SocketThread
                         {
                             clientIsAliveListener.onClientAlive(true,userBean);
                         }
-
+                        break;
+                    case AppConfig.CheckKey:
+                        KeyBean keyBean = ParseDataHelper.json2KeyBean(new String(frameBean.content));
+                        DataKeyUtil dataKeyUtil = new DataKeyUtil(MyApp.getSingleApp());
+                        boolean isSecces = dataKeyUtil.checkKeyIsExit(keyBean.key);
+                        EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyBegin,isSecces,keyBean.key));
+                        if(isSecces)
+                        {
+                            boolean add = ParseDataHelper.addKey(keyBean);
+                            RonLog.LogE("addkey:" + add);
+                        }
+                        keyBean.isSuccess = isSecces;
+                        MyApp.getSingleApp().mySocket.sendCheckKeyResult(keyBean);
+                        break;
+                    case AppConfig.CheckKeyResult:
+                        KeyBean keyBean1 = ParseDataHelper.json2KeyBean(new String(frameBean.content));
+                        EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyResult,keyBean1.isSuccess,keyBean1.key));
                         break;
                 }
 

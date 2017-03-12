@@ -32,6 +32,7 @@
 
         <activity android:name=".mvp_view.FriendsActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleInstance"
             android:theme="@android:style/Theme.Light.NoTitleBar"/>
 
         <activity android:name=".mvp_view.SpeedActivity"

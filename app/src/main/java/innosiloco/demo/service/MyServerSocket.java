@@ -17,6 +17,7 @@ import innosiloco.demo.beans.EventFriendListUpdate;
 import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.ICallback;
+import innosiloco.demo.beans.KeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AppConfig;
@@ -295,5 +296,38 @@ public class MyServerSocket implements Runnable,MySocket
 
             socketThread1.addFileMsg(talkBean.talkContent,talkBean.sendID,talkBean.toID);
         }
+    }
+
+
+
+    /********
+     * 发生 key 到服务器 检测key
+     * @param keyBean
+     */
+    public void sendKey2ServerCheckKey(KeyBean keyBean)
+    {
+        //TODO 无用
+
+    }
+
+    public void sendCheckKeyResult(KeyBean keyBean)
+    {
+        SocketThread socketThread1 = null;
+        for (SocketThread socketThread:socketThreadList)
+        {
+            if(socketThread.clientId == keyBean.clientID)
+            {
+                socketThread1 = socketThread;
+                break;
+            }
+        }
+        if(socketThread1 == null )
+            return;
+
+        FrameBean frameBean = new FrameBean();
+        frameBean.send2ID = 0;
+        frameBean.cmdIndex = AppConfig.CheckKeyResult;
+        frameBean.content = ParseDataHelper.keyBean2Json(keyBean).getBytes();
+        socketThread1.addMsg(ParseDataHelper.frame2Btye(frameBean));
     }
 }

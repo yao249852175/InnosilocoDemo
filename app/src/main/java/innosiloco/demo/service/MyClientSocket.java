@@ -12,6 +12,7 @@ import innosiloco.demo.R;
 import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.ICallback;
+import innosiloco.demo.beans.KeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AppConfig;
@@ -124,4 +125,23 @@ public class MyClientSocket implements Runnable,MySocket
             socketThread.addFileMsg(talkBean.talkContent,talkBean.sendID,talkBean.toID);
         }
     }
+
+    /********
+     * 发生 key 到服务器 检测key
+     * @param keyBean
+     */
+    public void sendKey2ServerCheckKey(KeyBean keyBean)
+    {
+        FrameBean frameBean = new FrameBean();
+        frameBean.send2ID = 0;
+        frameBean.cmdIndex = AppConfig.CheckKey;
+        frameBean.content = ParseDataHelper.keyBean2Json(keyBean).getBytes();
+        socketThread.addMsg(ParseDataHelper.frame2Btye(frameBean));
+    }
+
+    public void sendCheckKeyResult(KeyBean keyBean)
+    {
+        //TODO 不需要
+    }
+
 }

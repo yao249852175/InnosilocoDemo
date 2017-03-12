@@ -62,7 +62,6 @@ public class Mp3Util
         mRecorder.setMaxDuration(600000);
 //设置最大录制的大小 单位，字节
         mRecorder.setMaxFileSize(90*1024);
-
         mRecorder.setOutputFile(savaPath);
         mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         try {
@@ -154,7 +153,7 @@ public class Mp3Util
                 mPlayer.setDataSource(path);
                 mPlayer.prepare();
                 mPlayer.start();
-                mPlayer.setVolume(1.0f,1.0f);
+                mPlayer.setVolume(1f,1f);
             }catch(IOException e){
                 RonLog.LogE("播放失败");
             }

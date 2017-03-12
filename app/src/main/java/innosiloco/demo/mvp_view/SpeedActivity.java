@@ -43,6 +43,7 @@ import innosiloco.demo.MyApp;
 import innosiloco.demo.R;
 import innosiloco.demo.beans.EventDownLine;
 import innosiloco.demo.beans.FileBean;
+import innosiloco.demo.beans.KeyCheckEvent;
 import innosiloco.demo.beans.SecretKeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.TalkListBean;
@@ -51,6 +52,7 @@ import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AccRecord;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.BitmapUtils;
+import innosiloco.demo.utils.CheckKeyUIUtil;
 import innosiloco.demo.utils.FileUtils;
 import innosiloco.demo.utils.Mp3Util;
 import innosiloco.demo.utils.RonLog;
@@ -91,7 +93,12 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
     public static final int  	AUDIO_STATUS=2;
     private Handler handler=new Handler() {
         public void handleMessage(android.os.Message msg) {
-
+            switch (msg.what)
+            {
+                case 999:
+                    MyApp.getSingleApp().exitApp();
+                    break;
+            }
         }
     };
     /*****************
@@ -103,6 +110,8 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
 
     private Mp3Util mp3Util;
+
+    private CheckKeyUIUtil uiUtil;
 
     @Override
     public void findViews()
@@ -116,14 +125,32 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
         img_anim = (ImageView)findViewById(R.id.img_speead_anim);
     }
 
+    @Subscribe(threadMode = ThreadMode.MainThread)
+    public void hadCheckKey(KeyCheckEvent keyCheckEvent)
+    {
+        RonLog.LogE("检查结果:" + keyCheckEvent.isSuccess);
+//        Toast.makeText(this,"result:" + keyCheckEvent.isSuccess ,Toast.LENGTH_LONG).show();
+        if(keyCheckEvent.type == KeyCheckEvent.CheckKeyResult && !AppConfig.isServce)
+        {
+            uiUtil.setCheckResult(keyCheckEvent.isSuccess);
+            if(keyCheckEvent.isSuccess)
+                AESKeyUitl.getSingleton().setEncode_key(keyCheckEvent.key);
+        }else if(keyCheckEvent.type == KeyCheckEvent.CheckKeyBegin)
+            uiUtil.beginCheck(keyCheckEvent.isSuccess,keyCheckEvent.key);
+    }
+
     @Override
     public void initViews()
     {
+
+        myNick = AppConfig.userNick;
+
         mp3Util = new Mp3Util(img_anim);
         talks = new ArrayList<>();
         listView.setAdapter(baseAdapter);
         fromID = getIntent().getByteExtra(TalkFromID,(byte)-1);
         fromNick = getIntent().getStringExtra(TalkFromNick);
+        uiUtil = new CheckKeyUIUtil(titleView,this,"talk with:" + fromNick);
         TalkListBean talkListBean = TalkHelper.getSingle().getOnceTalk(fromID);
         if(talkListBean != null && talkListBean.talks!= null)
         {
@@ -131,7 +158,6 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
         }
 
 
-        myNick = AppConfig.userNick;
 
         wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).
                 newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "demo");
@@ -168,6 +194,12 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
     public void onClick(View view)
     {
+
+        if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+        {
+            dialogCreatUtil.showSingleBtnDialog(null,getString(R.string.keyIsloss),this);
+            return;
+        }
         switch (view.getId()) {
             case R.id.select_picture:// 选择照片
                 selectPicFromLocal();
@@ -183,12 +215,8 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
     public void sendMsg()
     {
-        if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
-        {
-            dialogCreatUtil.showSingleBtnDialog(null,getString(R.string.keyIsloss),this);
-            return;
-        }
-                TalkBean talkBean = new TalkBean();
+
+         TalkBean talkBean = new TalkBean();
         talkBean.sendID = AppConfig.clientId;
         talkBean.toID = fromID;
         talkBean.talkContent = editText.getText().toString().trim();
@@ -292,6 +320,14 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 case FileBean.isAAC:
                     case FileBean.isMp3:
                     talkViewHolder.chat_voice.setVisibility(View.VISIBLE);
+                        if(TextUtils.isEmpty(talkBean.talkContent))
+                        {
+                            talkViewHolder.chat_voice.setImageResource(R.drawable.mp3is_err);
+                        }else
+                        {
+                            talkViewHolder.chat_voice.setImageResource(R.drawable.anim_play_audio);
+
+                        }
                     break;
                 case FileBean.isJPE:
                 case FileBean.isPNG:
@@ -323,7 +359,11 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 @Override
                 public void onClick(View view)
                 {
-                    mp3Util.playMp3(talkBean.talkContent,talkViewHolder.chat_voice);
+                    if(!TextUtils.isEmpty(talkBean.talkContent))
+                    {
+                        mp3Util.playMp3(talkBean.talkContent,talkViewHolder.chat_voice);
+                    }
+
                 }
             });
             return convertView;
@@ -357,7 +397,12 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
             {//用户自己的客户端
                 if(dialogCreatUtil != null )
                 {
-                    dialogCreatUtil.showSingleBtnDialog(null,"连接服务器失败",SpeedActivity.this);
+                    dialogCreatUtil.showSingleBtnDialog(null, "连接服务器失败", SpeedActivity.this, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            handler.sendEmptyMessageDelayed(999,2000);
+                        }
+                    });
                 }
             }
         }
@@ -394,7 +439,8 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onDestroy()
+    {
         super.onDestroy();
 
     }
@@ -463,6 +509,11 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 case MotionEvent.ACTION_POINTER_UP:
                     return false;
                 case MotionEvent.ACTION_DOWN:
+                    if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                    {
+                        dialogCreatUtil.showSingleBtnDialog(null,getString(R.string.keyIsloss),SpeedActivity.this);
+                        return false;
+                    }
                     if(!checkRecorderPermission())
                     {
                         return false;

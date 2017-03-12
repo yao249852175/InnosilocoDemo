@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import innosiloco.demo.beans.FrameBean;
+import innosiloco.demo.beans.KeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AESKeyUitl;
@@ -29,6 +30,22 @@ public class ParseDataHelper
     public static LinkedBlockingQueue<FrameBean> talks = new LinkedBlockingQueue<>();
 
     public static List<UserBean> onlineUser = new ArrayList<>();
+
+    /***************
+     * 添加add key,从客户端来的，
+     */
+    public static boolean addKey(KeyBean keyBean)
+    {
+        for (UserBean userBean: onlineUser)
+        {
+            if(userBean.userID == keyBean.clientID)
+            {
+                userBean.key = keyBean.key;
+                return true;
+            }
+        }
+        return false;
+    }
 
     /*****************************88
      * 使用第三方工具gson
@@ -73,14 +90,21 @@ public class ParseDataHelper
         try{
             TalkBean talkBean =  gson.fromJson(json,TalkBean.class);
             RonLog.LogE("解密前:" + talkBean.talkContent);
+
             try {
                /* byte[] content =AESUtil.decryptArgByte(
                         AESKeyUitl.getSingleton().getDecode_key().getBytes(),talkBean.talkContent.getBytes(utf_8));
                 talkBean.talkContent = new String(content,utf_8);*/
                 String decodeKey = AESKeyUitl.getSingleton().getDecode_key(talkBean.sendID);
+                RonLog.LogE("sendID:" + talkBean.sendID + ",decodeKey:" + decodeKey + ",encode:" + AESKeyUitl.getSingleton().getEncode_key());
                 if(!TextUtils.isEmpty(decodeKey) &&
                         !TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
                 talkBean.talkContent = AESUtil.decrypt(decodeKey,talkBean.talkContent);
+                else
+                {//乱码显示
+                    String c = new String(AESUtil.toByte(talkBean.talkContent));
+                    talkBean.talkContent = c;
+                }
                 RonLog.LogE("解密后:" + talkBean.talkContent);
             }catch (Exception e)
             {
@@ -106,6 +130,19 @@ public class ParseDataHelper
     {
         Gson gson = new Gson();
         return gson.toJson(friendBean);
+    }
+
+    public static String keyBean2Json(KeyBean keyBean)
+    {
+        Gson gson = new Gson();
+        return gson.toJson(keyBean);
+    }
+
+    public static KeyBean json2KeyBean(String json)
+    {
+        Gson gson = new Gson();
+        KeyBean f =  gson.fromJson(json,KeyBean.class);
+        return f;
     }
 
     /****************************

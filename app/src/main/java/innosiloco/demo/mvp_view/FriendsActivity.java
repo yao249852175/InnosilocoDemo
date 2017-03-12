@@ -13,6 +13,8 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.ContactsContract;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,12 +36,16 @@ import innosiloco.demo.R;
 import innosiloco.demo.beans.EventDownLine;
 import innosiloco.demo.beans.EventFriendListUpdate;
 import innosiloco.demo.beans.FileBean;
+import innosiloco.demo.beans.KeyBean;
+import innosiloco.demo.beans.KeyCheckEvent;
 import innosiloco.demo.beans.SecretKeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
+import innosiloco.demo.mvp_presenter.DataKeyUtil;
 import innosiloco.demo.service.ParseDataHelper;
 import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AppConfig;
+import innosiloco.demo.utils.CheckKeyUIUtil;
 import innosiloco.demo.utils.RonLog;
 import innosiloco.demo.utils.TalkHelper;
 
@@ -70,6 +76,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     UsbInterface[] usbinterface=null;
     UsbEndpoint[][] endpoint=new UsbEndpoint[5][5];
 
+    private CheckKeyUIUtil uiUtil;
 
     @Override
     public void findViews() {
@@ -86,6 +93,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     @Override
     public void initViews()
     {
+        uiUtil = new CheckKeyUIUtil(titleView,this,getString(R.string.Label_FriendList));
         listView.setAdapter(friendListAdapter);
         setTitleAndColor(true);
         IntentFilter filter = new IntentFilter(ACTION1);
@@ -174,11 +182,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         @Override
         public void run()
         {
-            if(!AppConfig.isTest)
-            {//收到了，设备发来的key
-                AESKeyUitl.getSingleton().setDecode_key("");
-                AESKeyUitl.getSingleton().setEncode_key("");
-            }
+
             while (true)
             {
                 if(checkUSBDevice())
@@ -217,10 +221,20 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                 connectedThread =  new ConnectedThread();
                 connectedThread.start();
                 return;
+            }else if(ACTION1.equals(action))
+            {
+                if(!AppConfig.isTest)
+                {//收到了，设备发来的key
+                    AESKeyUitl.getSingleton().setDecode_key("");
+                    AESKeyUitl.getSingleton().setEncode_key("");
+                }
+                key = "";
+                uiUtil.onDestory();
+                threadcontrol_ct = false;
+                beginCheckDevice();
+//                Toast.makeText(FriendsActivity.this, action +":" ,Toast.LENGTH_LONG).show();
             }
-            threadcontrol_ct = false;
-            beginCheckDevice();
-            Toast.makeText(FriendsActivity.this, action +":" ,Toast.LENGTH_LONG).show();
+
         };
     };
 
@@ -360,6 +374,51 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             titleView.setTextColor(Color.BLACK);
         }
     }
+    private String key;
+
+    private DataKeyUtil dataKeyUtil;
+
+    @Subscribe(threadMode = ThreadMode.MainThread)
+    public void hadCheckKey(KeyCheckEvent keyCheckEvent)
+    {
+        RonLog.LogE("检查结果:" + keyCheckEvent.isSuccess);
+     /*   if(keyCheckEvent.type == KeyCheckEvent.CheckKeyResult && !AppConfig.isServce)
+        {
+            uiUtil.setCheckResult(keyCheckEvent.isSuccess);
+        }else
+            uiUtil.beginCheck(keyCheckEvent.isSuccess,key);*/
+
+        if(keyCheckEvent.type == KeyCheckEvent.CheckKeyResult && !AppConfig.isServce)
+        {
+            uiUtil.setCheckResult(keyCheckEvent.isSuccess);
+            if(keyCheckEvent.isSuccess)
+                AESKeyUitl.getSingleton().setEncode_key(keyCheckEvent.key);
+        }else if(keyCheckEvent.type == KeyCheckEvent.CheckKeyBegin)
+            uiUtil.beginCheck(keyCheckEvent.isSuccess,keyCheckEvent.key);
+    }
+
+    private void getKeyFromUsb(String key)
+    {
+        if(AppConfig.isServce )
+        {
+            AESKeyUitl.getSingleton().setEncode_key(key);
+            setTitleAndColor(false);
+            if(dataKeyUtil == null )
+            {
+                dataKeyUtil = new DataKeyUtil(this);
+            }
+            dataKeyUtil.insert(key);
+            Toast.makeText(this,R.string.Label_HadInsertSqlite,Toast.LENGTH_LONG).show();
+        }else
+        {
+            KeyBean keyBean = new KeyBean();
+            keyBean.clientID = AppConfig.clientId;
+            keyBean.key = key;
+            MyApp.getSingleApp().mySocket.sendKey2ServerCheckKey(keyBean);
+//            uiUtil.beginCheck(false,key);
+            EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyBegin,false,key));
+        }
+    }
 
     private Handler handler = new Handler()
     {
@@ -375,13 +434,22 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     if(!AppConfig.isTest)
                     {//收到了，设备发来的key
 //                        AESKeyUitl.getSingleton().setDecode_key("ron");
-                        boolean setSuccess = AESKeyUitl.getSingleton().setEncode_key(msg.obj.toString());
+                        if(TextUtils.isEmpty(key))
+                        {//刚刚才得到key
+                            key = msg.obj.toString();
+                             getKeyFromUsb(key);
+                        }
+
+                        /*boolean setSuccess = AESKeyUitl.getSingleton().setEncode_key(msg.obj.toString());
                         if(setSuccess)
                         {
                             setTitleAndColor(false);
-                        }
+                        }*/
                     }
-                    textView.setText(msg.obj.toString());
+//                    textView.setText(msg.obj.toString());
+                    break;
+                case 999:
+                    MyApp.getSingleApp().exitApp();
                     break;
             }
         }
@@ -420,7 +488,12 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 //            {//用户自己的客户端
             if(dialogCreatUtil != null )
             {
-                dialogCreatUtil.showSingleBtnDialog("","连接服务器失败",FriendsActivity.this);
+                dialogCreatUtil.showSingleBtnDialog("", "连接服务器失败", FriendsActivity.this, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        handler.sendEmptyMessageDelayed(999,2000);
+                    }
+                });
             }
 //            }
         }
@@ -437,6 +510,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        uiUtil.onDestory();
         MyApp.getSingleApp().mySocket.stop();
         MyApp.getSingleApp().mySocket = null;
         unregisterReceiver(mUsbReceiver);

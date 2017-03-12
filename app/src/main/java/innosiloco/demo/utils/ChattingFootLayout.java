@@ -56,7 +56,7 @@ public class ChattingFootLayout extends LinearLayout implements View.OnClickList
 	private				boolean           isMoreChecked=false;
 	private 			ArrayList<View> 					pageViews;
 	private 			ArrayList<ImageView> 			pointViews;
-	
+	private DialogCreatUtil dialogCreatUtil;
 	public ChattingFootLayout(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		this.context=context;
@@ -89,7 +89,7 @@ public class ChattingFootLayout extends LinearLayout implements View.OnClickList
 		params=(LayoutParams) moreLayout.getLayoutParams();
 		params.height=height;
 		moreLayout.setLayoutParams(params);
-		
+		dialogCreatUtil = new DialogCreatUtil();
 		
 		//监听EditText 的焦点变化情况
 		msgEdt.setOnFocusChangeListener(new OnFocusChangeListener() {
@@ -194,6 +194,11 @@ public class ChattingFootLayout extends LinearLayout implements View.OnClickList
 			hideKeyboard();
 			break;
 		case R.id.more_btn:
+			if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+			{
+				dialogCreatUtil.showSingleBtnDialog(null,context.getString(R.string.keyIsloss),(Activity)context);
+				return;
+			}
 			((Activity)context).getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 			/*moreLayout.setVisibility(VISIBLE);
 			setEditVisible();*/

@@ -16,7 +16,7 @@ public class AppConfig
      * true表示 不需要 设备，可以进行交换
      * false表示，需要设备进行交换
      */
-    public static boolean isTest = true;
+    public static boolean isTest = false;
 
     /**********************
      * 服务器的ip地址
@@ -66,6 +66,16 @@ public class AppConfig
      * 发送文件
      */
     public static final byte ResponseFile = 0x06;
+
+    /**********
+     * 验证key
+     */
+    public static final byte CheckKey = 0x07;
+
+    /**************
+     * 验证key的结果
+     */
+    public static final byte CheckKeyResult = 0x08;
 
 
     /*******************
