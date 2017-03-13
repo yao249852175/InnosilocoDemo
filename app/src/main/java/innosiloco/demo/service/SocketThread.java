@@ -294,6 +294,16 @@ public class SocketThread
                         //有人 下线
                         RonLog.LogD(new String(frameBean.content));
                         ParseDataHelper.onlineUser = ParseDataHelper.jsonFriendList(new String(frameBean.content));
+                        //去掉自己的
+                        /*for(UserBean userBean:ParseDataHelper.onlineUser)
+                        {
+                            if(userBean.userID == clientId)
+                            {
+                                ParseDataHelper.onlineUser.remove(userBean);
+                                AppConfig.clientId = userBean.userID;
+                                break;
+                            }
+                        }*/
                         EventBus.getDefault().post(new EventFriendListUpdate());
                         break;
                     case AppConfig.TalkCode:

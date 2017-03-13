@@ -117,9 +117,8 @@ public class SplashActivty extends BaseActivity
                     @Override
                     public void onClick(View v) {
                         Intent intent =  new Intent(Settings.ACTION_SETTINGS);
-                        startActivity(intent);
-                        SplashActivty.this.finish();
-                        MyApp.getSingleApp().exitApp();
+                        startActivityForResult(intent,1);
+
                     }
                 });
             }
@@ -262,7 +261,7 @@ public class SplashActivty extends BaseActivity
             if(userBean.clientIp.equals(AppConfig.clientIp))
             {
                 AppConfig.clientId = userBean.userID;
-                handler.sendEmptyMessageDelayed(0,3000);
+                handler.sendEmptyMessageDelayed(0,2000);
                 break;
             }
         }
@@ -424,9 +423,7 @@ public class SplashActivty extends BaseActivity
                                     @Override
                                     public void onClick(View v) {
                                         Intent intent1 =  new Intent(Settings.ACTION_WIFI_SETTINGS);
-                                        startActivity(intent1);
-                                        SplashActivty.this.finish();
-                                        MyApp.getSingleApp().exitApp();
+                                        startActivityForResult(intent1,0);
                                     }
                                 });
 
@@ -436,4 +433,11 @@ public class SplashActivty extends BaseActivity
             }
         }
     };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        RonLog.LogE("反馈了：：："+ requestCode);
+        init();
+    }
 }

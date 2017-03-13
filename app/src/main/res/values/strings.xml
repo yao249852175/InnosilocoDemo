@@ -60,4 +60,9 @@
     <string name="Label_FriendList">在线列表</string>
 
     <string name="Label_HadInsertSqlite">注册成功</string>
+
+    <string name="Label_RegisterDevice">注册设备</string>
+    <string name="Label_ReqeustMatch">请求匹配</string>
+    <string name="Label_InsertKeyPlease">请先插入Security Key</string>
+    <string name="Label_Clear">清理</string>
 </resources>

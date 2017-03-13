@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
  */
 public class WifiUtil
 {
-    public static final String WIFINAME = "Ron_Test";
+    public static final String WIFINAME = "inno_puf";
     public static final String WIFIPWD = "11111111";
 
 

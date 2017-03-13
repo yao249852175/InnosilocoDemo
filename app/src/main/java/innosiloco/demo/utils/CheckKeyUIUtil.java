@@ -6,10 +6,19 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.w3c.dom.Text;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import innosiloco.demo.MyApp;
 import innosiloco.demo.R;
@@ -20,17 +29,26 @@ import innosiloco.demo.R;
 
 public class CheckKeyUIUtil
 {
-    private TextView textView;
     private Context context;
     private boolean isSuccess;
-    private String key;
-    private String titleLabel;
     private final int ShowTime = 2000;
-    public  CheckKeyUIUtil(TextView textView,Context context,String titleLabel)
+    private ListView listView;
+    private Button button;
+    private String key;
+    private List<String> data;
+    public  CheckKeyUIUtil(Context context, ListView listView, Button button)
     {
-        this.textView = textView;
-        this.titleLabel = titleLabel;
         this.context = context;
+        this.listView = listView;
+        this.button = button;
+        this.button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                data.clear();
+                baseAdapter.notifyDataSetChanged();
+            }
+        });
+        this.data = new ArrayList<>();
     }
 
     public void setCheckResult(boolean isSuccess)
@@ -40,6 +58,40 @@ public class CheckKeyUIUtil
 
 //        handler.sendEmptyMessageDelayed(3,ShowTime);
     };
+
+    private void addNewLog(String log)
+    {
+        data.add(log);
+        listView.setSelection(baseAdapter.getCount() -1);
+        baseAdapter.notifyDataSetChanged();
+    }
+
+    private BaseAdapter baseAdapter = new BaseAdapter() {
+        @Override
+        public int getCount() {
+            return data.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return position;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent)
+        {
+            TextView logText =(TextView) LayoutInflater.from(context).inflate(R.layout.item_log,null)
+                    .findViewById(R.id.tv_Log);
+            logText.setText(data.get(position));
+            return logText;
+        }
+    };
+
 
     public void onDestory()
     {
@@ -61,14 +113,9 @@ public class CheckKeyUIUtil
                     break;
                 case 2:
                     pufCheck(isSuccess);
-
                     break;
                 case 3:
                     checkResult(isSuccess);
-                    handler.sendEmptyMessageDelayed(4,ShowTime);
-                    break;
-                case 4:
-                    checkOver(isSuccess);
                     break;
             }
         }
@@ -78,13 +125,12 @@ public class CheckKeyUIUtil
     {
         this.isSuccess = isSucess;
         this.key = key;
-        textView.setTextColor(Color.BLACK);
         if(AppConfig.isServce)
         {
-            this.textView.setText(context.getString(R.string.Label_Server_Begin));
+           addNewLog(context.getString(R.string.Label_Server_Begin));
         }else
         {
-            this.textView.setText(context.getString(R.string.Label_Client_begin));
+           addNewLog(context.getString(R.string.Label_Client_begin));
         }
         handler.sendEmptyMessageDelayed(2,ShowTime);
     }
@@ -95,15 +141,15 @@ public class CheckKeyUIUtil
         {
             if(isSuccess)
             {
-                this.textView.setText(context.getString(R.string.Label_CheckKey_SuccessPuf));
+                addNewLog(context.getString(R.string.Label_CheckKey_SuccessPuf));
             }else
             {
-                this.textView.setText(context.getString(R.string.Label_CheckKey_ErrPuf));
+                addNewLog(context.getString(R.string.Label_CheckKey_ErrPuf));
             }
 
         }else
         {
-            this.textView.setText(context.getString(R.string.Label_Client_Checking));
+            addNewLog(context.getString(R.string.Label_Client_Checking));
         }
 
         handler.sendEmptyMessageDelayed(3,ShowTime);
@@ -114,37 +160,17 @@ public class CheckKeyUIUtil
         if(AppConfig.isServce)
         {
             if(isSuccess)
-                this.textView.setText(context.getString(R.string.Label_Server_CheckSuccess));
+                addNewLog(context.getString(R.string.Label_Server_CheckSuccess));
             else
-                this.textView.setText(context.getString(R.string.Label_Server_CheckErr));
+                addNewLog(context.getString(R.string.Label_Server_CheckErr));
         }else
         {
             if(isSuccess)
-                this.textView.setText(context.getString(R.string.Label_Client_CheckSuccess));
+                addNewLog(context.getString(R.string.Label_Client_CheckSuccess));
             else
-                this.textView.setText(context.getString(R.string.Label_Client_CheckErr));
+                addNewLog(context.getString(R.string.Label_Client_CheckErr));
         }
     }
 
-    public void checkOver(boolean isSuccess)
-    {
-        if(!isSuccess)
-        {
-            textView.setText(R.string.keyIsloss);
-            textView.setTextColor(Color.RED);
-        }else
-        {
-            if(AppConfig.isServce )
-            {
-                if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
-                {
-                    textView.setText(R.string.keyIsloss);
-                    textView.setTextColor(Color.RED);
-                }
-            }
-            textView.setText(titleLabel);
-            textView.setTextColor(Color.BLACK);
-        }
-    }
 
 }

@@ -111,8 +111,6 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
     private Mp3Util mp3Util;
 
-    private CheckKeyUIUtil uiUtil;
-
     @Override
     public void findViews()
     {
@@ -125,7 +123,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
         img_anim = (ImageView)findViewById(R.id.img_speead_anim);
     }
 
-    @Subscribe(threadMode = ThreadMode.MainThread)
+  /*  @Subscribe(threadMode = ThreadMode.MainThread)
     public void hadCheckKey(KeyCheckEvent keyCheckEvent)
     {
         RonLog.LogE("检查结果:" + keyCheckEvent.isSuccess);
@@ -137,7 +135,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 AESKeyUitl.getSingleton().setEncode_key(keyCheckEvent.key);
         }else if(keyCheckEvent.type == KeyCheckEvent.CheckKeyBegin)
             uiUtil.beginCheck(keyCheckEvent.isSuccess,keyCheckEvent.key);
-    }
+    }*/
 
     @Override
     public void initViews()
@@ -150,15 +148,11 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
         listView.setAdapter(baseAdapter);
         fromID = getIntent().getByteExtra(TalkFromID,(byte)-1);
         fromNick = getIntent().getStringExtra(TalkFromNick);
-        uiUtil = new CheckKeyUIUtil(titleView,this,"talk with:" + fromNick);
         TalkListBean talkListBean = TalkHelper.getSingle().getOnceTalk(fromID);
         if(talkListBean != null && talkListBean.talks!= null)
         {
             talks.addAll(talkListBean.talks);
         }
-
-
-
         wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).
                 newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "demo");
         initTitle(!TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()));

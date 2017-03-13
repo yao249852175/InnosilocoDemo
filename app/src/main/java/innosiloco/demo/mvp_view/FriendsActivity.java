@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -66,23 +67,28 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 
     private UsbDeviceConnection connection;
 
+    private TextView btn_Bottom;
+
     byte[] mybuffer=new byte[1024];
     boolean threadcontrol_ct=false;
     boolean threadcontrol_mt=false;
     boolean threadsenddata=false;
-
-    TextView textView;
 
     UsbInterface[] usbinterface=null;
     UsbEndpoint[][] endpoint=new UsbEndpoint[5][5];
 
     private CheckKeyUIUtil uiUtil;
 
+    private ListView listView_log;
+    private Button  log_clear;
+
     @Override
     public void findViews() {
         listView = (ListView) findViewById(R.id.list_friends);
-        textView = (TextView) findViewById(R.id.test);
         titleView= (TextView)findViewById(R.id.tv_head_title);
+        btn_Bottom = (TextView)findViewById(R.id.tv_bottom);
+        listView_log = (ListView)findViewById(R.id.list_log);
+        log_clear =(Button) findViewById(R.id.btn_clearLog);
     }
 
     private final static String ACTION ="android.hardware.usb.action.USB_STATE";
@@ -93,7 +99,14 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     @Override
     public void initViews()
     {
-        uiUtil = new CheckKeyUIUtil(titleView,this,getString(R.string.Label_FriendList));
+        if(AppConfig.isServce)
+        {
+            btn_Bottom.setText(R.string.Label_RegisterDevice);
+        }else
+        {
+            btn_Bottom.setText(R.string.Label_ReqeustMatch);
+        }
+        uiUtil = new CheckKeyUIUtil(this,listView_log,log_clear);
         listView.setAdapter(friendListAdapter);
         setTitleAndColor(true);
         IntentFilter filter = new IntentFilter(ACTION1);
@@ -241,6 +254,27 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     @Override
     public void initLisenter() {
         listView.setOnItemClickListener(this);
+        btn_Bottom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+
+            }
+        });
+    }
+
+    /************
+     * 底部按钮的点击事件
+     * @param view
+     */
+    public void onBottomBtnClick(View view)
+    {
+        if(TextUtils.isEmpty(key))
+        {
+            Toast.makeText(this,R.string.Label_InsertKeyPlease,Toast.LENGTH_LONG).show();
+            return;
+        }
+       getKeyFromUsb(key);
     }
 
     @Override
@@ -251,7 +285,16 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 
     private BaseAdapter friendListAdapter = new BaseAdapter() {
         @Override
-        public int getCount() {
+        public int getCount()
+        {
+            for(UserBean userBean:ParseDataHelper.onlineUser)
+            {
+                if(userBean.userID == AppConfig.clientId)
+                {
+                    ParseDataHelper.onlineUser.remove(userBean);
+                    break;
+                }
+            }
             return ParseDataHelper.onlineUser.size();
         }
 
@@ -283,6 +326,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             {
                 friendViewHolder = (FriendViewHolder) convertView.getTag();
             }
+
             friendViewHolder.name.setText(userBean.userNike);
             TalkBean talkBean = TalkHelper.getSingle().getLastTalk(userBean.userID);
             if(talkBean != null )
@@ -402,7 +446,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         if(AppConfig.isServce )
         {
             AESKeyUitl.getSingleton().setEncode_key(key);
-            setTitleAndColor(false);
+
             if(dataKeyUtil == null )
             {
                 dataKeyUtil = new DataKeyUtil(this);
@@ -437,7 +481,8 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                         if(TextUtils.isEmpty(key))
                         {//刚刚才得到key
                             key = msg.obj.toString();
-                             getKeyFromUsb(key);
+                            setTitleAndColor(false);
+//                             getKeyFromUsb(key);
                         }
 
                         /*boolean setSuccess = AESKeyUitl.getSingleton().setEncode_key(msg.obj.toString());
