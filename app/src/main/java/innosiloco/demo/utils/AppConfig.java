@@ -40,6 +40,18 @@ public class AppConfig
     public static String BaseDirectory = Environment
             .getExternalStorageDirectory() + "/inno/cache/";
 
+    /*********
+     * 保存cache的目录
+     */
+    public static String ErrIMGDirectory = Environment
+            .getExternalStorageDirectory() + "/inno/err/img";
+
+    /*********
+     * 保存cache的目录
+     */
+    public static String ErrVoiceDirectory = Environment
+            .getExternalStorageDirectory() + "/inno/err/voice";
+
     /********************
      * <p>解析的类型</p>
      * <p>聊天内容</p>

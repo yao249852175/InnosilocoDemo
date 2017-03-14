@@ -39,6 +39,24 @@ public class FileUtils
         return 0;
     }
 
+    public static String getRandomErrFile(boolean isImg)
+    {
+        int ramdom = (int)Math.random()*100;
+        if(isImg)
+        {
+            ramdom = ramdom%3;
+            String [] errImg = {"err_img_01.jpg","err_img_02.jpg","err_img_03.jpg"};
+            return AppConfig.ErrIMGDirectory+errImg[ramdom];
+        }else
+        {
+
+            String [] errVoice = {"err_voice_1.wav","err_voice_2.wav","err_voice_3.wav",
+                    "err_voice_4.wav","err_voice_5.wav","err_voice_6.wav","err_voice_7.wav"};
+            ramdom = ramdom%errVoice.length;
+            return AppConfig.ErrVoiceDirectory+errVoice[ramdom];
+        }
+    }
+
 
 
     /**

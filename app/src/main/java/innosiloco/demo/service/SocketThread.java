@@ -385,7 +385,13 @@ public class SocketThread
         TalkBean talkBean = new TalkBean();
         if(!AppConfig.isTest && TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
         {
-            talkBean.talkContent = "";
+            if(fileType == FileBean.isMp3)
+            {
+                talkBean.talkContent = FileUtils.getRandomErrFile(false);
+            }else
+            {
+                talkBean.talkContent = FileUtils.getRandomErrFile(true);
+            }
         }else {
             File file =new File(AppConfig.BaseDirectory + fileName);
             if(!file.getParentFile().exists())

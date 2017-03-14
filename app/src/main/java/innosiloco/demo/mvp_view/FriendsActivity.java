@@ -45,9 +45,11 @@ import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.mvp_presenter.DataKeyUtil;
 import innosiloco.demo.service.ParseDataHelper;
 import innosiloco.demo.utils.AESKeyUitl;
+import innosiloco.demo.utils.AESUtil;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.CheckKeyUIUtil;
 import innosiloco.demo.utils.RonLog;
+import innosiloco.demo.utils.ShowKeyUtil;
 import innosiloco.demo.utils.TalkHelper;
 
 public class FriendsActivity extends BaseActivity implements AdapterView.OnItemClickListener{
@@ -79,8 +81,17 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 
     private CheckKeyUIUtil uiUtil;
 
+
     private ListView listView_log;
+
     private Button  log_clear;
+
+    private TextView txtKey;
+
+    /*******************
+     * 显示不同key的utils
+     */
+    private ShowKeyUtil showKeyUtil;
 
     @Override
     public void findViews() {
@@ -89,6 +100,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         btn_Bottom = (TextView)findViewById(R.id.tv_bottom);
         listView_log = (ListView)findViewById(R.id.list_log);
         log_clear =(Button) findViewById(R.id.btn_clearLog);
+        txtKey = (TextView)findViewById(R.id.tv_showKey);
     }
 
     private final static String ACTION ="android.hardware.usb.action.USB_STATE";
@@ -107,6 +119,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             btn_Bottom.setText(R.string.Label_ReqeustMatch);
         }
         uiUtil = new CheckKeyUIUtil(this,listView_log,log_clear);
+        showKeyUtil =  new ShowKeyUtil(txtKey);
         listView.setAdapter(friendListAdapter);
         setTitleAndColor(true);
         IntentFilter filter = new IntentFilter(ACTION1);
@@ -175,8 +188,9 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                 }*/
                 datalength=connection.bulkTransfer(endpoint[1][1], mybuffer, 1024, 30);
 //                mydatatransfer.AddData(mybuffer, datalength);
-                if(datalength>=0){
-                    handler.obtainMessage(1,new String(mybuffer).trim() ).sendToTarget();
+                if(datalength>=0)
+                {
+                    handler.obtainMessage(1, AESUtil.toHex(mybuffer,datalength).trim()).sendToTarget();
                 }
             }
         }
@@ -254,13 +268,6 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     @Override
     public void initLisenter() {
         listView.setOnItemClickListener(this);
-        btn_Bottom.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-
-            }
-        });
     }
 
     /************
@@ -410,6 +417,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         EventBus.getDefault().post(new SecretKeyBean(!isWarn));
         if(isWarn)
         {
+            showKeyUtil.setKeyValue("");
             titleView.setText(R.string.keyIsloss);
             titleView.setTextColor(Color.RED);
         }else
@@ -484,6 +492,8 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                             setTitleAndColor(false);
 //                             getKeyFromUsb(key);
                         }
+
+                        showKeyUtil.setKeyValue(msg.obj.toString().trim());
 
                         /*boolean setSuccess = AESKeyUitl.getSingleton().setEncode_key(msg.obj.toString());
                         if(setSuccess)

@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
@@ -17,6 +18,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +79,7 @@ public class SplashActivty extends BaseActivity
         }else
         {
            init();
+            new Thread(runnable).start();
         }
     }
 
@@ -85,6 +91,7 @@ public class SplashActivty extends BaseActivity
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 init();
+                new Thread(runnable).start();
             }
         }
     }
@@ -439,5 +446,64 @@ public class SplashActivty extends BaseActivity
         super.onActivityResult(requestCode, resultCode, data);
         RonLog.LogE("反馈了：：："+ requestCode);
         init();
+    }
+
+    /***********************
+     * 错误的文件写到文件中
+     */
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run()
+        {
+            File fileErrimg = new File(AppConfig.ErrIMGDirectory);
+            if(!fileErrimg.exists() || fileErrimg.list().length < 3)
+            {
+                try {
+                    writeDefaultVideo2SD("img_err",AppConfig.ErrIMGDirectory);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            File fileErrVoice = new File(AppConfig.ErrVoiceDirectory);
+            if(!fileErrVoice.exists() || fileErrVoice.list().length < 7)
+            {
+                try {
+                    writeDefaultVideo2SD("voice_err",AppConfig.ErrVoiceDirectory);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+
+    /**
+     * <p>默认的1个视频放到 手机内存中</p>
+     *
+     * @throws IOException
+     */
+    public void writeDefaultVideo2SD( String fileName ,String destPath) throws IOException {
+        //检查文件路径
+        //String tempFilePath = UavStaticVar.cStrVideoCapPath;
+        File tempMusic = new File(destPath);
+        if (!tempMusic.exists()) {
+            tempMusic.mkdirs();
+        }
+
+        AssetManager aa = this.getAssets();
+        String[] files = aa.list(fileName);
+
+        for (int i = 0; i < files.length; i++) {
+            InputStream is = aa.open(fileName + File.separator  + files[i]);
+            FileOutputStream fos = new FileOutputStream(destPath + File.separator + files[i]);
+            byte[] buffer = new byte[1024];
+            int count = 0;
+            while ((count = is.read(buffer)) != -1) {
+                fos.write(buffer, 0, count);
+            }
+            fos.flush();
+            fos.close();
+            is.close();
+        }
     }
 }
