@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">芯动科技</string>
+    <string name="app_name">安盾加密</string>
     <!-- 英文字体  -->
     <string name="SleepFontFamily">sans-serif-light</string>
     <string name="ok">确定</string>
@@ -47,9 +47,9 @@
     <string name="Label_Image">图片</string>
     <string name="Label_ACC">语音</string>
 
-    <string name="Label_Client_begin">开始发生配对请求</string>
+    <string name="Label_Client_begin">安全加密配对启动</string>
     <string name="Label_Client_Checking">正在配对...</string>
-    <string name="Label_Client_CheckErr">服务器拒绝配对</string>
+    <string name="Label_Client_CheckErr">不受信设备，服务器拒绝配对</string>
     <string name="Label_Client_CheckSuccess">配对成功</string>
     <string name="Label_CheckKey_ErrPuf">该设备不符合puf行为,</string>
     <string name="Label_CheckKey_SuccessPuf">该设备符合puf行为</string>
@@ -65,4 +65,8 @@
     <string name="Label_ReqeustMatch">请求匹配</string>
     <string name="Label_InsertKeyPlease">请先插入Security Key</string>
     <string name="Label_Clear">清理</string>
+
+    <string name="Label_Register_step1">开始收集puf行为</string>
+
+    <string name="Label_Register_step2">已经密存储puf行为</string>
 </resources>

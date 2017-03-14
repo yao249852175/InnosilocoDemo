@@ -26,8 +26,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import de.greenrobot.event.EventBus;
 import de.greenrobot.event.Subscribe;
@@ -69,7 +71,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 
     private UsbDeviceConnection connection;
 
-    private TextView btn_Bottom;
+    private Button btn_Bottom;
 
     byte[] mybuffer=new byte[1024];
     boolean threadcontrol_ct=false;
@@ -86,8 +88,6 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 
     private Button  log_clear;
 
-    private TextView txtKey;
-
     /*******************
      * 显示不同key的utils
      */
@@ -97,10 +97,9 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     public void findViews() {
         listView = (ListView) findViewById(R.id.list_friends);
         titleView= (TextView)findViewById(R.id.tv_head_title);
-        btn_Bottom = (TextView)findViewById(R.id.tv_bottom);
+        btn_Bottom = (Button) findViewById(R.id.tv_bottom);
         listView_log = (ListView)findViewById(R.id.list_log);
         log_clear =(Button) findViewById(R.id.btn_clearLog);
-        txtKey = (TextView)findViewById(R.id.tv_showKey);
     }
 
     private final static String ACTION ="android.hardware.usb.action.USB_STATE";
@@ -118,8 +117,8 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         {
             btn_Bottom.setText(R.string.Label_ReqeustMatch);
         }
-        uiUtil = new CheckKeyUIUtil(this,listView_log,log_clear);
-        showKeyUtil =  new ShowKeyUtil(txtKey);
+        uiUtil = new CheckKeyUIUtil(this,listView_log,log_clear,btn_Bottom);
+        showKeyUtil =  new ShowKeyUtil(uiUtil);
         listView.setAdapter(friendListAdapter);
         setTitleAndColor(true);
         IntentFilter filter = new IntentFilter(ACTION1);
@@ -276,12 +275,17 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
      */
     public void onBottomBtnClick(View view)
     {
-        if(TextUtils.isEmpty(key))
+       if(TextUtils.isEmpty(key))
         {
             Toast.makeText(this,R.string.Label_InsertKeyPlease,Toast.LENGTH_LONG).show();
             return;
         }
-       getKeyFromUsb(key);
+        showKeyUtil.setBegin(true,(Button)view);
+        /*if(!AppConfig.isServce)
+        {
+            getKeyFromUsb(key);
+        }*/
+
     }
 
     @Override
@@ -289,20 +293,12 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         return R.layout.activity_friends;
     }
 
-
     private BaseAdapter friendListAdapter = new BaseAdapter() {
         @Override
         public int getCount()
         {
-            for(UserBean userBean:ParseDataHelper.onlineUser)
-            {
-                if(userBean.userID == AppConfig.clientId)
-                {
-                    ParseDataHelper.onlineUser.remove(userBean);
-                    break;
-                }
-            }
-            return ParseDataHelper.onlineUser.size();
+            int size =  ParseDataHelper.onlineUser.size();
+            return size;
         }
 
         @Override
@@ -333,8 +329,13 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             {
                 friendViewHolder = (FriendViewHolder) convertView.getTag();
             }
-
-            friendViewHolder.name.setText(userBean.userNike);
+            if(userBean.userID == AppConfig.clientId)
+            {
+                friendViewHolder.name.setText(userBean.userNike + "(本机)");
+            }else
+            {
+                friendViewHolder.name.setText(userBean.userNike );
+            }
             TalkBean talkBean = TalkHelper.getSingle().getLastTalk(userBean.userID);
             if(talkBean != null )
             {
@@ -417,7 +418,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         EventBus.getDefault().post(new SecretKeyBean(!isWarn));
         if(isWarn)
         {
-            showKeyUtil.setKeyValue("");
+            showKeyUtil.onDestory();
             titleView.setText(R.string.keyIsloss);
             titleView.setTextColor(Color.RED);
         }else
@@ -448,8 +449,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         }else if(keyCheckEvent.type == KeyCheckEvent.CheckKeyBegin)
             uiUtil.beginCheck(keyCheckEvent.isSuccess,keyCheckEvent.key);
     }
-
-    private void getKeyFromUsb(String key)
+private void getKeyFromUsb(String key)
     {
         if(AppConfig.isServce )
         {
@@ -490,7 +490,8 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                         {//刚刚才得到key
                             key = msg.obj.toString();
                             setTitleAndColor(false);
-//                             getKeyFromUsb(key);
+
+//                             getKeyFromUsb(key);,
                         }
 
                         showKeyUtil.setKeyValue(msg.obj.toString().trim());
@@ -565,6 +566,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        showKeyUtil.onDestory();
         uiUtil.onDestory();
         MyApp.getSingleApp().mySocket.stop();
         MyApp.getSingleApp().mySocket = null;
