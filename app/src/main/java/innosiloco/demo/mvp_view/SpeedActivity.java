@@ -48,7 +48,9 @@ import innosiloco.demo.beans.KeyCheckEvent;
 import innosiloco.demo.beans.SecretKeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.TalkListBean;
+import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.mvp_view.iview.FileSelectActivity;
+import innosiloco.demo.service.ParseDataHelper;
 import innosiloco.demo.utils.AESKeyUitl;
 import innosiloco.demo.utils.AESUtil;
 import innosiloco.demo.utils.AccRecord;
@@ -113,6 +115,36 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
     private Mp3Util mp3Util;
     private  CheckKeyUIUtil checkKeyUIUtil;
+
+    private boolean isMatch =false;
+
+    private void judgeIsMatch()
+    {
+        String otherKey = "";
+        for (UserBean userBean: ParseDataHelper.onlineUser)
+        {
+            if(userBean.userID == fromID )
+            {
+                otherKey = userBean.key;
+                break;
+            }
+        }
+        if(!TextUtils.isEmpty(AppConfig.cacheKey_other)&&
+                !TextUtils.isEmpty(AppConfig.cacheKey_self)
+                &&!TextUtils.isEmpty(otherKey)&&
+                !TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key())
+                )
+        {
+            if(AppConfig.cacheKey_other.equals(otherKey)&&
+                    AppConfig.cacheKey_self.equals(AESKeyUitl.getSingleton().getEncode_key()))
+            {
+                isMatch = true;
+                return;
+            }
+        }
+
+        isMatch = false;
+    }
 
     @Override
     public void findViews()
@@ -260,6 +292,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
     private BaseAdapter baseAdapter = new BaseAdapter() {
         @Override
         public int getCount() {
+            judgeIsMatch();
             return talks.size();
         }
 
@@ -317,7 +350,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 talkViewHolder.headRight.setVisibility(View.INVISIBLE);
             }
 
-            if( TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+            if(!isMatch)
             {
                 try {
                     String c = new String(AESUtil.toByte(AESUtil.encrypt("ron",talkBean.talkContent)));
@@ -355,7 +388,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 case FileBean.isJPE:
                 case FileBean.isPNG:
                     talkViewHolder.imgTalk.setVisibility(View.VISIBLE);
-                    if( TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                    if(!isMatch)
                     {
                         String imgPath = FileUtils.getRandomErrFile(true);
                         Bitmap bmp = BitmapFactory.decodeFile(imgPath);
@@ -381,7 +414,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(SpeedActivity.this,ImageActivity.class);
-                    if( TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                    if(!isMatch)
                     {
                         String imgPath = FileUtils.getRandomErrFile(true);
                         intent.putExtra(ImageActivity.PATH,imgPath);
@@ -397,7 +430,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 {
                     if(!TextUtils.isEmpty(talkBean.talkContent))
                     {
-                        if( TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                        if(!isMatch)
                         {
                             String imgPath = FileUtils.getRandomErrFile(false);
                             mp3Util.playMp3(imgPath,talkViewHolder.chat_voice);

@@ -362,7 +362,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                         friendViewHolder.lastSpeed.setText(R.string.Label_Image);
                         break;
                     default:
-                        if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                       /* if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
                         {
                             try {
                                 String c = new String(AESUtil.toByte(AESUtil.encrypt("ron",talkBean.talkContent)));
@@ -373,7 +373,8 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                             }
 
                         }else
-                        friendViewHolder.lastSpeed.setText(talkBean.talkContent);
+                        friendViewHolder.lastSpeed.setText(talkBean.talkContent);*/
+                        friendViewHolder.lastSpeed.setText("");
                         break;
                 }
                 friendViewHolder.speedNum.setText(""+ TalkHelper.getSingle().getOnceTalk(userBean.userID).talks.size());
@@ -650,6 +651,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     questionBean = (QuestionBean) msg.obj;
                     if(AppConfig.isServce)
                     {
+                        AppConfig.setCacheKey(showKeyUtil.lastRealyKey,(byte)1);
                         uiUtil.addNewLog(arrayA[6] +":" + showKeyUtil.cacheKey);
                         uiUtil.addNewLog(arrayA[7]);
                         MyApp.getSingleApp().mySocket.sendQuestion(new
@@ -750,6 +752,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                         dataKeyUtil = new DataKeyUtil(this);
                     }
                     dataKeyUtil.insert(showKeyUtil.lastRealyKey);
+                    AppConfig.setCacheKey(showKeyUtil.lastRealyKey,(byte) 0);
                     AESKeyUitl.getSingleton().setEncode_key(showKeyUtil.lastRealyKey);
                 }
 
@@ -799,5 +802,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         MyApp.getSingleApp().mySocket = null;
         unregisterReceiver(mUsbReceiver);
         MyApp.getSingleApp().exitApp();
+        AppConfig.cacheKey_self="";
+        AppConfig.cacheKey_other="";
     }
 }

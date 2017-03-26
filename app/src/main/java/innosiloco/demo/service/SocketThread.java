@@ -166,7 +166,14 @@ public class SocketThread
     {
         FileBean fileBean = new FileBean(FileBean.DataType,(byte)0,(byte) 0);
         fileBean.data = data;
-        this.sendMsgs.offer(fileBean);
+        for(int i = 0 ; i < 4 ; i ++ )
+        {
+           if (this.sendMsgs.offer(fileBean))
+           {
+               break;
+           }
+        }
+
     }
 
     /***********

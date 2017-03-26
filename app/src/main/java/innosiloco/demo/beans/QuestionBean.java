@@ -1,5 +1,7 @@
 package innosiloco.demo.beans;
 
+import innosiloco.demo.utils.AppConfig;
+
 /**
  * Created by ronya on 2017/3/18.
  */
@@ -21,6 +23,7 @@ public class QuestionBean
     public  String key;
     public boolean isSuccess = false;
     public boolean isQuestion = true;
+    public byte fromId;
 
     /**************
      *
@@ -35,8 +38,11 @@ public class QuestionBean
         this.key = key;
         this.isQuestion = isQuestion;
         this.isSuccess = isSuccess;
+        fromId = AppConfig.clientId;
 
     }
 
-    public  QuestionBean(){}
+    public  QuestionBean(){
+        fromId = AppConfig.clientId;
+    }
 }

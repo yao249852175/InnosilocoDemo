@@ -86,15 +86,16 @@ public class ShowKeyUtil
             if(AppConfig.isServce)
             {
                 dataKeyUtil.insert(lastRealyKey);
+//                AESKeyUitl.getSingleton().setEncode_key(key);
             } else
             {
-            KeyBean keyBean = new KeyBean();
-            keyBean.clientID = AppConfig.clientId;
-            keyBean.key = lastRealyKey;
-            MyApp.getSingleApp().mySocket.sendKey2ServerCheckKey(keyBean);
-            EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyBegin,false,lastRealyKey));
-                RonLog.LogE("开始发送检测客户端的key");
-        }
+                KeyBean keyBean = new KeyBean();
+                keyBean.clientID = AppConfig.clientId;
+                keyBean.key = lastRealyKey;
+                MyApp.getSingleApp().mySocket.sendKey2ServerCheckKey(keyBean);
+                EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyBegin,false,lastRealyKey));
+                    RonLog.LogE("开始发送检测客户端的key");
+            }
             begin = false;
         }
 
@@ -102,7 +103,9 @@ public class ShowKeyUtil
         {
             lastRealyKey =  key;
 //            AESKeyUitl.getSingleton().setEncode_key(key);
+
             if(dataKeyUtil.checkKeyIsExit(key))
+//            if(AppConfig.cachKey_self.equals(key))
             {
                 AESKeyUitl.getSingleton().setEncode_key(key);
             }
@@ -112,7 +115,6 @@ public class ShowKeyUtil
                     dataKeyUtil.insert(key);
                 } else {
                     //如果使正确的key，则客户端将该key发送到服务端进行验证
-
                     {
                         KeyBean keyBean = new KeyBean();
                         keyBean.clientID = AppConfig.clientId;

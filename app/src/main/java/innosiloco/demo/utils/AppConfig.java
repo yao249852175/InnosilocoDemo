@@ -2,6 +2,9 @@ package innosiloco.demo.utils;
 
 import android.os.Environment;
 
+import innosiloco.demo.beans.UserBean;
+import innosiloco.demo.service.ParseDataHelper;
+
 /**
  * Created by Administrator on 2017/2/25.
  */
@@ -33,6 +36,30 @@ public class AppConfig
      * <p>在线列表</p>
      */
     public static final byte FriendCode = 0x01;
+
+    /************
+     * 保存自己的上一次的匹配过的key
+     */
+    public static String cacheKey_self = "";
+
+    /**************
+     * 对方的匹配过的可以
+     */
+    public static String cacheKey_other = "";
+
+    public static void  setCacheKey(String selfKey,byte otherId)
+    {
+        AppConfig.cacheKey_self = selfKey;
+        for (UserBean userBean:ParseDataHelper.onlineUser)
+        {
+            if(userBean.userID == otherId )
+            {
+                AppConfig.cacheKey_other = userBean.key;
+                break;
+            }
+        }
+
+    }
 
     /*********
      * 保存cache的目录
