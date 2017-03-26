@@ -13,7 +13,6 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,10 +25,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 import de.greenrobot.event.EventBus;
 import de.greenrobot.event.Subscribe;
@@ -150,7 +147,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
         while (deviceIterator.hasNext()) {
             device = deviceIterator.next();
-            if(device.getVendorId()== AESKeyUitl.getSingleton().myvid&&device.getProductId()==AESKeyUitl.getSingleton().mypid)
+            if(device.getVendorId()== AESKeyUitl.getSingleton().myvid&&device.getProductId()== AESKeyUitl.getSingleton().mypid)
             {
                 return true;
             }
@@ -379,7 +376,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                         friendViewHolder.lastSpeed.setText(talkBean.talkContent);
                         break;
                 }
-                friendViewHolder.speedNum.setText(""+TalkHelper.getSingle().getOnceTalk(userBean.userID).talks.size());
+                friendViewHolder.speedNum.setText(""+ TalkHelper.getSingle().getOnceTalk(userBean.userID).talks.size());
             }else
             {
                 friendViewHolder.lastSpeed.setText("");
@@ -431,7 +428,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         //TODO 未检测到可用的key--- ron
         if(AppConfig.isServce )
         {
-            RonLog.LogE( "" +ParseDataHelper.onlineUser.get(position).key);
+            RonLog.LogE( "" + ParseDataHelper.onlineUser.get(position).key);
             if(TextUtils.isEmpty(ParseDataHelper.onlineUser.get(position).key) || TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
             {
                 if(uiUtil.getIsSuccess()) {
@@ -461,8 +458,8 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         }
 
         Intent intent = new Intent(this,SpeedActivity.class);
-        intent.putExtra(SpeedActivity.TalkFromNick,ParseDataHelper.onlineUser.get(position).userNike);
-        intent.putExtra(SpeedActivity.TalkFromID,ParseDataHelper.onlineUser.get(position).userID);
+        intent.putExtra(SpeedActivity.TalkFromNick, ParseDataHelper.onlineUser.get(position).userNike);
+        intent.putExtra(SpeedActivity.TalkFromID, ParseDataHelper.onlineUser.get(position).userID);
         startActivityForResult(intent,LookTalks);
     }
 
@@ -516,6 +513,28 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         }*/
     }
 
+    private void getKeyFromUsb(String key)
+    {
+        if(AppConfig.isServce )
+        {
+            AESKeyUitl.getSingleton().setEncode_key(key);
+
+            if(dataKeyUtil == null )
+            {
+                dataKeyUtil = new DataKeyUtil(this);
+            }
+            dataKeyUtil.insert(key);
+            //Toast.makeText(this,R.string.Label_HadInsertSqlite,Toast.LENGTH_LONG).show();
+        }else
+        {
+            KeyBean keyBean = new KeyBean();
+            keyBean.clientID = AppConfig.clientId;
+            keyBean.key = key;
+            MyApp.getSingleApp().mySocket.sendKey2ServerCheckKey(keyBean);
+//            uiUtil.beginCheck(false,key);
+            EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyBegin,false,key));
+        }
+    }
     String[] arrayA ;
     String[] arrayB ;
     private Handler handler = new Handler()

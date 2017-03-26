@@ -1,15 +1,11 @@
 package innosiloco.demo.utils;
 
 import android.graphics.Color;
-import android.provider.ContactsContract;
-import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +15,6 @@ import innosiloco.demo.MyApp;
 import innosiloco.demo.R;
 import innosiloco.demo.beans.KeyBean;
 import innosiloco.demo.beans.KeyCheckEvent;
-import innosiloco.demo.beans.QuestionBean;
 import innosiloco.demo.mvp_presenter.DataKeyUtil;
 
 /**
@@ -132,7 +127,7 @@ public class ShowKeyUtil
             begin = false;
         }
         RonLog.LogE("beginLog:" + beginLog);
-        if(beginLog && AppConfig.isServce )
+        if(beginLog == true && AppConfig.isServce )
         {
 
             if (TextUtils.isEmpty(lastKey)) {
