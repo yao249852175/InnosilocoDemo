@@ -20,7 +20,7 @@
             android:text="Title"
             android:layout_centerInParent="true"
             android:id="@+id/tv_head_title"
-            android:textSize="24sp"
+            android:textSize="18sp"
             android:textColor="#000000"
             android:layout_height="wrap_content" />
 

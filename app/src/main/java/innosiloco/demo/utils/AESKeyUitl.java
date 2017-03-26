@@ -3,8 +3,10 @@ package innosiloco.demo.utils;
 import android.app.Activity;
 import android.text.TextUtils;
 
+import de.greenrobot.event.EventBus;
 import innosiloco.demo.MyApp;
 import innosiloco.demo.R;
+import innosiloco.demo.beans.EncodeKeyEvent;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.service.ParseDataHelper;
 
@@ -67,6 +69,9 @@ public class AESKeyUitl
                 userBean.userNike = AppConfig.userNick;
                 userBean.userID = AppConfig.clientId;
                 MyApp.getSingleApp().mySocket.updateUser(userBean);
+                EventBus.getDefault().post(new EncodeKeyEvent(true));
+            }else {
+                EventBus.getDefault().post(new EncodeKeyEvent(false));
             }
             return true;
         }

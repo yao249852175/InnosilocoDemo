@@ -6,6 +6,7 @@
         android:layout_width="match_parent"
         android:paddingLeft="@dimen/activity_vertical_margin"
         android:paddingRight="@dimen/activity_vertical_margin"
+        android:id="@+id/ll_friend_item"
         android:layout_height="@dimen/height_item_friend"
         android:gravity="center_vertical"
         android:orientation="horizontal">
@@ -36,7 +37,7 @@
             android:layout_height="match_parent">
             <TextView
                 android:layout_width="match_parent"
-                android:textSize="22sp"
+                android:textSize="18sp"
                 android:text="RON"
                 android:id="@+id/tv_friend_name"
                 android:textColor="@color/colorBlack"

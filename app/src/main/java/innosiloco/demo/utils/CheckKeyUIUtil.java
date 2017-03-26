@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,15 +30,19 @@ import innosiloco.demo.R;
 
 public class CheckKeyUIUtil
 {
+    public  boolean isShowLog = false;
+    public  boolean checkRst = false;
     private Context context;
     private boolean isSuccess;
     private final int ShowTime = 2000;
     private ListView listView;
     private Button button;
     private String key;
-    private List<String> data;
-    public  CheckKeyUIUtil(Context context, ListView listView, Button button)
+    private List<SpannableStringBuilder> data;
+    private Button bottomBtn;
+    public  CheckKeyUIUtil(Context context, ListView listView, Button button,Button bottomBtn)
     {
+        this.bottomBtn = bottomBtn;
         this.context = context;
         this.listView = listView;
         this.button = button;
@@ -49,21 +54,36 @@ public class CheckKeyUIUtil
             }
         });
         this.data = new ArrayList<>();
+        listView.setAdapter(baseAdapter);
+    }
+
+    public boolean getIsSuccess()
+    {
+        return isSuccess;
     }
 
     public void setCheckResult(boolean isSuccess)
     {
 //        Toast.makeText(MyApp.getSingleApp(),"Result:" + isSuccess,Toast.LENGTH_LONG).show();
         this.isSuccess = isSuccess;
+        this.checkRst = isSuccess;
 
 //        handler.sendEmptyMessageDelayed(3,ShowTime);
     };
 
-    private void addNewLog(String log)
+    public void addNewLog(SpannableStringBuilder log)
     {
         data.add(log);
         listView.setSelection(baseAdapter.getCount() -1);
         baseAdapter.notifyDataSetChanged();
+    }
+
+    public void addNewLog(String log)
+    {
+
+        data.add(new SpannableStringBuilder(log));
+        baseAdapter.notifyDataSetChanged();
+        listView.setSelection(baseAdapter.getCount() -1);
     }
 
     private BaseAdapter baseAdapter = new BaseAdapter() {
@@ -85,10 +105,11 @@ public class CheckKeyUIUtil
         @Override
         public View getView(int position, View convertView, ViewGroup parent)
         {
-            TextView logText =(TextView) LayoutInflater.from(context).inflate(R.layout.item_log,null)
+            View v = LayoutInflater.from(context).inflate(R.layout.item_log,null);
+            TextView logText =(TextView) v
                     .findViewById(R.id.tv_Log);
             logText.setText(data.get(position));
-            return logText;
+            return v;
         }
     };
 
@@ -125,31 +146,29 @@ public class CheckKeyUIUtil
     {
         this.isSuccess = isSucess;
         this.key = key;
-        if(AppConfig.isServce)
-        {
-           addNewLog(context.getString(R.string.Label_Server_Begin));
-        }else
-        {
-           addNewLog(context.getString(R.string.Label_Client_begin));
+        if(isShowLog) {
+            if (AppConfig.isServce) {
+                addNewLog(context.getString(R.string.Label_Server_Begin));
+            } else {
+//           addNewLog(context.getString(R.string.Label_Client_begin));
+            }
         }
         handler.sendEmptyMessageDelayed(2,ShowTime);
     }
 
     public void pufCheck(boolean isSuccess)
     {
-        if(AppConfig.isServce)
-        {
-            if(isSuccess)
-            {
-                addNewLog(context.getString(R.string.Label_CheckKey_SuccessPuf));
-            }else
-            {
-                addNewLog(context.getString(R.string.Label_CheckKey_ErrPuf));
-            }
+        if(isShowLog) {
+            if (AppConfig.isServce) {
+                if (isSuccess) {
+                    addNewLog(context.getString(R.string.Label_CheckKey_SuccessPuf));
+                } else {
+                    addNewLog(context.getString(R.string.Label_CheckKey_ErrPuf));
+                }
 
-        }else
-        {
-            addNewLog(context.getString(R.string.Label_Client_Checking));
+            } else {
+                addNewLog(context.getString(R.string.Label_Client_Checking));
+            }
         }
 
         handler.sendEmptyMessageDelayed(3,ShowTime);
@@ -157,19 +176,20 @@ public class CheckKeyUIUtil
 
     public void checkResult(boolean isSuccess)
     {
-        if(AppConfig.isServce)
-        {
-            if(isSuccess)
-                addNewLog(context.getString(R.string.Label_Server_CheckSuccess));
-            else
-                addNewLog(context.getString(R.string.Label_Server_CheckErr));
-        }else
-        {
-            if(isSuccess)
-                addNewLog(context.getString(R.string.Label_Client_CheckSuccess));
-            else
-                addNewLog(context.getString(R.string.Label_Client_CheckErr));
+        if(isShowLog) {
+            if (AppConfig.isServce) {
+                if (isSuccess)
+                    addNewLog(context.getString(R.string.Label_Server_CheckSuccess));
+                else
+                    addNewLog(context.getString(R.string.Label_Server_CheckErr));
+            } else {
+                if (isSuccess)
+                    addNewLog(context.getString(R.string.Label_Client_CheckSuccess));
+                else
+                    addNewLog(context.getString(R.string.Label_Client_CheckErr));
+            }
         }
+        bottomBtn.setEnabled(true);
     }
 
 

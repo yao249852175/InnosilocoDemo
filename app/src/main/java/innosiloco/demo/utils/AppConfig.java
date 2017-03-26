@@ -44,13 +44,13 @@ public class AppConfig
      * 保存cache的目录
      */
     public static String ErrIMGDirectory = Environment
-            .getExternalStorageDirectory() + "/inno/err/img";
+            .getExternalStorageDirectory() + "/inno/err/img/";
 
     /*********
      * 保存cache的目录
      */
     public static String ErrVoiceDirectory = Environment
-            .getExternalStorageDirectory() + "/inno/err/voice";
+            .getExternalStorageDirectory() + "/inno/err/voice/";
 
     /********************
      * <p>解析的类型</p>
@@ -88,6 +88,11 @@ public class AppConfig
      * 验证key的结果
      */
     public static final byte CheckKeyResult = 0x08;
+
+    /*********
+     * 问题的校验过程
+     */
+    public static final byte QuestionCheck = 0x09;
 
 
     /*******************

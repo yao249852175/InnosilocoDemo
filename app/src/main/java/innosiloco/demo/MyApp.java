@@ -26,7 +26,7 @@ public class MyApp extends Application
 
     public void exitApp()
     {
-        Process.killProcess(android.os.Process.myPid());  //获取PID
+        Process.killProcess(Process.myPid());  //获取PID
         System.exit(0);
     }
 }

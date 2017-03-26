@@ -13,6 +13,7 @@ import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.ICallback;
 import innosiloco.demo.beans.KeyBean;
+import innosiloco.demo.beans.QuestionBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AppConfig;
@@ -98,6 +99,16 @@ public class MyClientSocket implements Runnable,MySocket
         frameBean.send2ID = 0;
         frameBean.cmdIndex = AppConfig.TalkCode;
         frameBean.content = ParseDataHelper.talkBean2Json(talkBean).getBytes();
+        socketThread.addMsg(ParseDataHelper.frame2Btye(frameBean));
+    }
+
+
+    public void sendQuestion(QuestionBean questionBean)
+    {
+        FrameBean frameBean = new FrameBean();
+        frameBean.send2ID = 0;
+        frameBean.cmdIndex = AppConfig.QuestionCheck;
+        frameBean.content = ParseDataHelper.Question2Json(questionBean).getBytes();
         socketThread.addMsg(ParseDataHelper.frame2Btye(frameBean));
     }
 

@@ -41,6 +41,7 @@ import de.greenrobot.event.Subscribe;
 import de.greenrobot.event.ThreadMode;
 import innosiloco.demo.MyApp;
 import innosiloco.demo.R;
+import innosiloco.demo.beans.EncodeKeyEvent;
 import innosiloco.demo.beans.EventDownLine;
 import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.KeyCheckEvent;
@@ -49,6 +50,7 @@ import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.TalkListBean;
 import innosiloco.demo.mvp_view.iview.FileSelectActivity;
 import innosiloco.demo.utils.AESKeyUitl;
+import innosiloco.demo.utils.AESUtil;
 import innosiloco.demo.utils.AccRecord;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.BitmapUtils;
@@ -110,6 +112,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
 
 
     private Mp3Util mp3Util;
+    private  CheckKeyUIUtil checkKeyUIUtil;
 
     @Override
     public void findViews()
@@ -194,6 +197,13 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
             dialogCreatUtil.showSingleBtnDialog(null,getString(R.string.keyIsloss),this);
             return;
         }
+
+//        if(checkKeyUIUtil.checkRst)
+//        {
+//            dialogCreatUtil.showSingleBtnDialog(null,getString(R.string.check_fail),this);
+//            return;
+//        }
+
         switch (view.getId()) {
             case R.id.select_picture:// 选择照片
                 selectPicFromLocal();
@@ -290,7 +300,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
             {
                 talkViewHolder.name.setText(myNick);
                 talkViewHolder.linearLayout.setGravity(Gravity.RIGHT);
-                talkViewHolder.talk_content.setText(talkBean.talkContent);
+//                talkViewHolder.talk_content.setText(talkBean.talkContent);
                 talkViewHolder.bg.setBackgroundResource(R.drawable.bg_talk_content_right);
                 talkViewHolder.headLeft.setVisibility(View.INVISIBLE);
                 talkViewHolder.headRight.setVisibility(View.VISIBLE);
@@ -300,10 +310,25 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
             {
                 talkViewHolder.name.setText(fromNick);
                 talkViewHolder.linearLayout.setGravity(Gravity.LEFT);
-                talkViewHolder.talk_content.setText(talkBean.talkContent);
+
+
                 talkViewHolder.bg.setBackgroundResource(R.drawable.bg_talk_content_left);
                 talkViewHolder.headLeft.setVisibility(View.VISIBLE);
                 talkViewHolder.headRight.setVisibility(View.INVISIBLE);
+            }
+
+            if( TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+            {
+                try {
+                    String c = new String(AESUtil.toByte(AESUtil.encrypt("ron",talkBean.talkContent)));
+                    talkViewHolder.talk_content.setText(c);
+                }catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }else
+            {
+                talkViewHolder.talk_content.setText(talkBean.talkContent);
             }
             talkViewHolder.talk_content.setVisibility(View.GONE);
             talkViewHolder.imgTalk.setVisibility(View.GONE);
@@ -314,6 +339,10 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 case FileBean.isAAC:
                     case FileBean.isMp3:
                     talkViewHolder.chat_voice.setVisibility(View.VISIBLE);
+
+
+
+
                         if(TextUtils.isEmpty(talkBean.talkContent))
                         {
                             talkViewHolder.chat_voice.setImageResource(R.drawable.mp3is_err);
@@ -326,13 +355,21 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 case FileBean.isJPE:
                 case FileBean.isPNG:
                     talkViewHolder.imgTalk.setVisibility(View.VISIBLE);
-                    if(TextUtils.isEmpty(talkBean.talkContent))
+                    if( TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
                     {
-                        talkViewHolder.imgTalk.setImageResource(R.drawable.dud);
+                        String imgPath = FileUtils.getRandomErrFile(true);
+                        Bitmap bmp = BitmapFactory.decodeFile(imgPath);
+                        talkViewHolder.imgTalk.setImageBitmap(bmp);
                     }else
                     {
-                        Bitmap bmp = BitmapFactory.decodeFile(talkBean.talkContent);
-                        talkViewHolder.imgTalk.setImageBitmap(bmp);
+                        if(TextUtils.isEmpty(talkBean.talkContent))
+                        {
+                            talkViewHolder.imgTalk.setImageResource(R.drawable.dud);
+                        }else
+                        {
+                            Bitmap bmp = BitmapFactory.decodeFile(talkBean.talkContent);
+                            talkViewHolder.imgTalk.setImageBitmap(bmp);
+                        }
                     }
                     break;
                 default:
@@ -344,6 +381,11 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(SpeedActivity.this,ImageActivity.class);
+                    if( TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                    {
+                        String imgPath = FileUtils.getRandomErrFile(true);
+                        intent.putExtra(ImageActivity.PATH,imgPath);
+                    }else
                     intent.putExtra(ImageActivity.PATH,talkBean.talkContent);
                     startActivity(intent);
                 }
@@ -355,6 +397,11 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
                 {
                     if(!TextUtils.isEmpty(talkBean.talkContent))
                     {
+                        if( TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                        {
+                            String imgPath = FileUtils.getRandomErrFile(false);
+                            mp3Util.playMp3(imgPath,talkViewHolder.chat_voice);
+                        }else
                         mp3Util.playMp3(talkBean.talkContent,talkViewHolder.chat_voice);
                     }
 
@@ -378,6 +425,12 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
             talks.add(talkBean);
         }
        notifyData();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MainThread)
+    public void encodeKey(EncodeKeyEvent talkBean)
+    {
+        notifyData();
     }
 
 
@@ -427,7 +480,7 @@ public class SpeedActivity extends BaseActivity implements View.OnClickListener{
             titleView.setTextColor(Color.RED);
         }else
         {
-            setTitle("talk with:" + fromNick);
+            setTitle("talk with:" + fromNick );
             titleView.setTextColor(Color.BLACK);
         }
     }

@@ -60,6 +60,7 @@ public class Mp3Util
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         mRecorder.setMaxDuration(600000);
+
 //设置最大录制的大小 单位，字节
         mRecorder.setMaxFileSize(90*1024);
         mRecorder.setOutputFile(savaPath);

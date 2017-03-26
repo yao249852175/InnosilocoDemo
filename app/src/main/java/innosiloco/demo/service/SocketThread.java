@@ -25,6 +25,7 @@ import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.KeyBean;
 import innosiloco.demo.beans.KeyCheckEvent;
+import innosiloco.demo.beans.QuestionBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.mvp_presenter.DataKeyUtil;
@@ -338,10 +339,15 @@ public class SocketThread
                             clientIsAliveListener.onClientAlive(true,userBean);
                         }
                         break;
-                    case AppConfig.CheckKey:
+                    case AppConfig.CheckKey://只有服务器端 才有这种可能
                         KeyBean keyBean = ParseDataHelper.json2KeyBean(new String(frameBean.content));
                         DataKeyUtil dataKeyUtil = new DataKeyUtil(MyApp.getSingleApp());
                         boolean isSecces = dataKeyUtil.checkKeyIsExit(keyBean.key);
+                      /*  if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()) || !dataKeyUtil.checkKeyIsExit(AESKeyUitl.getSingleton().getEncode_key()))
+                        {
+                            isSecces = false;
+                        }*/
+
                         EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyBegin,isSecces,keyBean.key));
                         if(isSecces)
                         {
@@ -350,10 +356,15 @@ public class SocketThread
                         }
                         keyBean.isSuccess = isSecces;
                         MyApp.getSingleApp().mySocket.sendCheckKeyResult(keyBean);
+                        EventBus.getDefault().post(new QuestionBean(QuestionBean.QuestionStep_1,"",isSecces,true));
                         break;
                     case AppConfig.CheckKeyResult:
                         KeyBean keyBean1 = ParseDataHelper.json2KeyBean(new String(frameBean.content));
                         EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyResult,keyBean1.isSuccess,keyBean1.key));
+                        break;
+                    case AppConfig.QuestionCheck:
+                        QuestionBean questionBean = ParseDataHelper.json2Question(new String(frameBean.content));
+                        EventBus.getDefault().post(questionBean);
                         break;
                 }
 
@@ -383,7 +394,7 @@ public class SocketThread
                 break;
         }
         TalkBean talkBean = new TalkBean();
-        if(!AppConfig.isTest && TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+        /*if(!AppConfig.isTest && TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
         {
             if(fileType == FileBean.isMp3)
             {
@@ -392,7 +403,7 @@ public class SocketThread
             {
                 talkBean.talkContent = FileUtils.getRandomErrFile(true);
             }
-        }else {
+        }else */{
             File file =new File(AppConfig.BaseDirectory + fileName);
             if(!file.getParentFile().exists())
             {

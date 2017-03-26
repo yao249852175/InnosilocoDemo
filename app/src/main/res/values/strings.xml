@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">芯动科技</string>
+    <string name="app_name">安盾加密</string>
     <!-- 英文字体  -->
     <string name="SleepFontFamily">sans-serif-light</string>
     <string name="ok">确定</string>
@@ -12,18 +12,19 @@
 
     <string name="client_connWifi">请到wifi设置项,\n连接服务器端手机开启wifi热点\n(SSID:%1$s,pwd:%2$s)</string>
 
-    <string name="name_Server">服务端</string>
-    <string name="name_Client">客户端</string>
+    <string name="name_Server">Device A</string>
+    <string name="name_Client">Device B</string>
 
-    <string name="keyIsloss">Lose Security Key</string>
+    <string name="keyIsloss">丢失安全密钥</string>
+    <string name="nomatch">请先配对</string>
+
 
     <string name="uploadFileIsBig">上传文件太大</string>
-
     <string name="Label_onLine">在线列表</string>
 
     <array name="KeyArray">
-        <item>helloworld</item>
-        <item>ZBZBZBZBZBZBZBZBZBZBZBZBZBZBZBZB</item>
+        <item></item>
+        <item></item>
     </array>
 
 
@@ -47,22 +48,52 @@
     <string name="Label_Image">图片</string>
     <string name="Label_ACC">语音</string>
 
-    <string name="Label_Client_begin">开始发生配对请求</string>
+    <string name="Label_Client_begin">安全加密配对启动...</string>
     <string name="Label_Client_Checking">正在配对...</string>
-    <string name="Label_Client_CheckErr">服务器拒绝配对</string>
+    <string name="Label_Client_CheckErr">不受信设备，服务器拒绝配对</string>
     <string name="Label_Client_CheckSuccess">配对成功</string>
-    <string name="Label_CheckKey_ErrPuf">该设备不符合puf行为,</string>
-    <string name="Label_CheckKey_SuccessPuf">该设备符合puf行为</string>
+    <string name="Label_CheckKey_ErrPuf">该设备不符合PUF行为,</string>
+    <string name="Label_CheckKey_SuccessPuf">该设备符合PUF行为</string>
 
     <string name="Label_Server_Begin">检测到配对请求</string>
     <string name="Label_Server_CheckErr">不信任设备，配对失败</string>
     <string name="Label_Server_CheckSuccess">配对成功</string>
     <string name="Label_FriendList">在线列表</string>
 
-    <string name="Label_HadInsertSqlite">注册成功</string>
+    <string name="Label_HadInsertSqlite">注册成功!</string>
 
     <string name="Label_RegisterDevice">注册设备</string>
-    <string name="Label_ReqeustMatch">请求匹配</string>
-    <string name="Label_InsertKeyPlease">请先插入Security Key</string>
+    <string name="Label_ReqeustMatch">请求加密配对</string>
+    <string name="Label_InsertKeyPlease">请先插入安全密钥</string>
     <string name="Label_Clear">清理</string>
+
+    <string name="Label_Register_step1">开始收集PUF行为</string>
+    <string name="Label_Register_step2">已加密存储PUF行为</string>
+    
+    <array name="CheckQuest_list_A">
+        <item>开始挑战device B</item>
+        <item>Device B回复挑战</item>
+        <item>Device B回复挑战</item>
+        <item>Device B 的回答符合动态加密PUF行为</item>
+        <item>开始接受Device B挑战</item>
+        <item>Device A回复挑战</item>
+        <item>Device A回复挑战</item>
+        <item>双向挑战成功!请点击列表中的Device B开始安全聊天!</item>
+    </array>
+
+    <array name="CheckQuest_list_B">
+        <item>开始接受Device A的挑战</item>
+        <item>Device B回复挑战</item>
+        <item>Device B回复挑战</item>
+        <item>Device B 的回答符合动态加密PUF行为</item>
+        <item>开始挑战Device A</item>
+        <item>Device A回复挑战</item>
+        <item>Device A回复挑战</item>
+        <item>Device A 的回答符合动态加密PUF行为</item>
+        <item>双向挑战成功!请点击列表中的Device A开始安全聊天!</item>
+    </array>
+
+    <string name="Label_ServerKeyNoPuf">该设备不符合PUF行为</string>
+    <string name="test">helloworld</string>
+
 </resources>

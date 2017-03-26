@@ -1,30 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:background="@color/colorBg"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:weightSum="1"
+    android:orientation="vertical"
+    android:baselineAligned="false">
+
     <include layout="@layout/layout_head"/>
+
     <ListView
         android:layout_width="match_parent"
-        android:layout_weight="1"
         android:scrollbars="none"
         android:padding="@dimen/activity_vertical_margin"
         android:id="@+id/list_friends"
         android:divider="@color/colorSpace"
         android:dividerHeight="1dp"
-        android:layout_height="wrap_content"/>
+        android:layout_weight="1"
+        android:layout_height="157dp"/>
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_margin="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
         android:background="@drawable/bg_log"
-        android:layout_height="160dp">
+        android:layout_height="260dp"
+        >
 
         <ListView
             android:layout_width="match_parent"
             android:id="@+id/list_log"
-            android:paddingBottom="50dp"
             android:layout_height="match_parent"/>
 
         <Button
@@ -38,39 +44,40 @@
             android:id="@+id/btn_clearLog"
             android:textColor="#00a0ff"
             android:background="@drawable/btn_dialog_bg"
-            android:layout_height="wrap_content" />
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_gravity="bottom"
-            android:paddingLeft="5dp"
-            android:layout_height="40dp">
-            <TextView
-                android:layout_width="wrap_content"
-                android:textSize="14sp"
-                android:textColor="@color/colorBlack"
-                android:text="KEY:"
-                android:layout_height="wrap_content" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:textSize="14sp"
-                android:id="@+id/tv_showKey"
-                android:textColor="@color/colorBlack"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
+            android:layout_height="40dp" />
+        <!-- <LinearLayout
+             android:layout_width="match_parent"
+             android:orientation="horizontal"
+             android:gravity="center_vertical"
+             android:layout_gravity="bottom"
+             android:paddingLeft="5dp"
+             android:layout_height="40dp">
+             <TextView
+                 android:layout_width="wrap_content"
+                 android:textSize="14sp"
+                 android:textColor="@color/colorBlack"
+                 android:text="KEY:"
+                 android:layout_height="wrap_content" />
+             <TextView
+                 android:layout_width="wrap_content"
+                 android:textSize="14sp"
+                 android:id="@+id/tv_showKey"
+                 android:textColor="@color/colorBlack"
+                 android:layout_height="wrap_content" />
+         </LinearLayout>-->
     </FrameLayout>
 
-    <TextView android:layout_width="match_parent"
-        android:layout_height="50dp"
+    <Button android:layout_width="match_parent"
+        android:layout_height="45dp"
         android:text="@string/cancel"
-        android:textSize="@dimen/dialog_btn_font_size"
-        android:fontFamily="@string/SleepFontFamily"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-light"
         android:gravity="center"
         android:id="@+id/tv_bottom"
         android:onClick="onBottomBtnClick"
         android:textColor="@color/dialog_btn_font_color"
         android:layout_margin="5dp"
         android:background="@drawable/btn_dialog_bg"
-        />
+        android:elevation="0dp" />
+
 </LinearLayout>

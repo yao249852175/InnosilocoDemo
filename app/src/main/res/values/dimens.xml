@@ -11,9 +11,9 @@
     <dimen name="height_edit">40dp</dimen>
 
 
-    <dimen name="dialog_title_font_size">19sp</dimen>
-    <dimen name="dialog_content_font_size">16sp</dimen>
-    <dimen name="dialog_btn_font_size">19sp</dimen>
+    <dimen name="dialog_title_font_size">16sp</dimen>
+    <dimen name="dialog_content_font_size">12sp</dimen>
+    <dimen name="dialog_btn_font_size">18sp</dimen>
     <dimen name="dialog_content_margin">20dp</dimen>
     <dimen name="dialog_content_left">15dp</dimen>
 </resources>

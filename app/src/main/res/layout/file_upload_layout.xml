@@ -3,13 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/base_list_bg_color"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:weightSum="1">
     <include layout="@layout/title_bar_layout" />
 	<ListView
         android:id="@+id/listview"
         android:layout_width="match_parent"
         android:divider="@null"
         android:scrollbars="none"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent">
     </ListView>
 </LinearLayout>

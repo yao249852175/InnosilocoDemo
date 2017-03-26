@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:background="@color/colorBg"
     android:layout_height="match_parent">
+
     <include layout="@layout/layout_head"/>
 
     <FrameLayout
@@ -31,7 +32,8 @@
             android:layout_height="160dp" />
 
     </FrameLayout>
-        <include
+
+    <include
             android:id="@+id/chat_input_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

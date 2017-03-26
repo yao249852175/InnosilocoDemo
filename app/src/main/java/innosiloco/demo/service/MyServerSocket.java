@@ -18,6 +18,7 @@ import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.ICallback;
 import innosiloco.demo.beans.KeyBean;
+import innosiloco.demo.beans.QuestionBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AppConfig;
@@ -171,6 +172,8 @@ public class MyServerSocket implements Runnable,MySocket
         sendMsg2Client(talkBean.toID, AppConfig.TalkCode,content);
     }
 
+
+
     /********************
      * 监听客户端的存活状态
      */
@@ -298,6 +301,18 @@ public class MyServerSocket implements Runnable,MySocket
         }
     }
 
+    public void sendQuestion(QuestionBean questionBean)
+    {
+        FrameBean frameBean = new FrameBean();
+        frameBean.send2ID = 0;
+        frameBean.cmdIndex = AppConfig.QuestionCheck;
+        frameBean.content = ParseDataHelper.Question2Json(questionBean).getBytes();
+        for (SocketThread socketThread:socketThreadList)
+        {
+            socketThread.addMsg(ParseDataHelper.frame2Btye(frameBean));
+        }
+
+    }
 
 
     /********

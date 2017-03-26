@@ -26,19 +26,23 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import de.greenrobot.event.EventBus;
 import de.greenrobot.event.Subscribe;
 import de.greenrobot.event.ThreadMode;
 import innosiloco.demo.MyApp;
 import innosiloco.demo.R;
+import innosiloco.demo.beans.EncodeKeyEvent;
 import innosiloco.demo.beans.EventDownLine;
 import innosiloco.demo.beans.EventFriendListUpdate;
 import innosiloco.demo.beans.FileBean;
 import innosiloco.demo.beans.KeyBean;
 import innosiloco.demo.beans.KeyCheckEvent;
+import innosiloco.demo.beans.QuestionBean;
 import innosiloco.demo.beans.SecretKeyBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
@@ -69,7 +73,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 
     private UsbDeviceConnection connection;
 
-    private TextView btn_Bottom;
+    private Button btn_Bottom;
 
     byte[] mybuffer=new byte[1024];
     boolean threadcontrol_ct=false;
@@ -86,8 +90,6 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 
     private Button  log_clear;
 
-    private TextView txtKey;
-
     /*******************
      * 显示不同key的utils
      */
@@ -97,10 +99,11 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     public void findViews() {
         listView = (ListView) findViewById(R.id.list_friends);
         titleView= (TextView)findViewById(R.id.tv_head_title);
-        btn_Bottom = (TextView)findViewById(R.id.tv_bottom);
+        btn_Bottom = (Button) findViewById(R.id.tv_bottom);
         listView_log = (ListView)findViewById(R.id.list_log);
         log_clear =(Button) findViewById(R.id.btn_clearLog);
-        txtKey = (TextView)findViewById(R.id.tv_showKey);
+         arrayA = getResources().getStringArray(R.array.CheckQuest_list_A);
+         arrayB = getResources().getStringArray(R.array.CheckQuest_list_B);
     }
 
     private final static String ACTION ="android.hardware.usb.action.USB_STATE";
@@ -118,8 +121,13 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         {
             btn_Bottom.setText(R.string.Label_ReqeustMatch);
         }
-        uiUtil = new CheckKeyUIUtil(this,listView_log,log_clear);
-        showKeyUtil =  new ShowKeyUtil(txtKey);
+        uiUtil = new CheckKeyUIUtil(this,listView_log,log_clear,btn_Bottom);
+        showKeyUtil =  new ShowKeyUtil(uiUtil);
+
+        //clear while lose the key
+        TalkHelper.getSingle().clearTalk(AppConfig.clientId);
+        friendListAdapter.notifyDataSetChanged();
+
         listView.setAdapter(friendListAdapter);
         setTitleAndColor(true);
         IntentFilter filter = new IntentFilter(ACTION1);
@@ -155,7 +163,6 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     class ConnectedThread extends Thread{
         @Override
         public void destroy() {
-            // TODO Auto-generated method stub
             super.destroy();
         }
         public ConnectedThread()
@@ -177,7 +184,6 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         int a = 0;
         @Override
         public void run() {
-            // TODO Auto-generated method stub
             int datalength;
             while(threadcontrol_ct){
                 /*if(threadsenddata){
@@ -247,6 +253,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             {
                 connectedThread =  new ConnectedThread();
                 connectedThread.start();
+                showKeyUtil.firstInsert();
                 return;
             }else if(ACTION1.equals(action))
             {
@@ -276,12 +283,18 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
      */
     public void onBottomBtnClick(View view)
     {
-        if(TextUtils.isEmpty(key))
-        {
+       if(TextUtils.isEmpty(key))
+       {
             Toast.makeText(this,R.string.Label_InsertKeyPlease,Toast.LENGTH_LONG).show();
             return;
-        }
-       getKeyFromUsb(key);
+       }
+        ((Button)view).setEnabled(false);
+        showKeyUtil.setBegin(true,(Button)view);
+        handler.sendEmptyMessageDelayed(998,5000);
+       /*if(!AppConfig.isServce)
+       {
+           getKeyFromUsb(key);
+       }*/
     }
 
     @Override
@@ -289,20 +302,12 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         return R.layout.activity_friends;
     }
 
-
     private BaseAdapter friendListAdapter = new BaseAdapter() {
         @Override
         public int getCount()
         {
-            for(UserBean userBean:ParseDataHelper.onlineUser)
-            {
-                if(userBean.userID == AppConfig.clientId)
-                {
-                    ParseDataHelper.onlineUser.remove(userBean);
-                    break;
-                }
-            }
-            return ParseDataHelper.onlineUser.size();
+            int size =  ParseDataHelper.onlineUser.size();
+            return size;
         }
 
         @Override
@@ -328,13 +333,20 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                 friendViewHolder.name = (TextView) convertView.findViewById(R.id.tv_friend_name);
                 friendViewHolder.speedNum = (TextView) convertView.findViewById(R.id.tv_friend_speedNum);
                 friendViewHolder.lastSpeed = (TextView) convertView.findViewById(R.id.tv_friend_lastSpeed);
+                friendViewHolder.bg = convertView.findViewById(R.id.ll_friend_item);
                 convertView.setTag(friendViewHolder);
             }else
             {
                 friendViewHolder = (FriendViewHolder) convertView.getTag();
             }
-
-            friendViewHolder.name.setText(userBean.userNike);
+            if(userBean.userID == AppConfig.clientId)
+            {//TODO  -----修改本机item背景颜色
+                friendViewHolder.name.setText(userBean.userNike + "(本机)");
+                friendViewHolder.bg.setBackgroundColor(Color.GRAY);
+            }else
+            {
+                friendViewHolder.name.setText(userBean.userNike );
+            }
             TalkBean talkBean = TalkHelper.getSingle().getLastTalk(userBean.userID);
             if(talkBean != null )
             {
@@ -353,6 +365,17 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                         friendViewHolder.lastSpeed.setText(R.string.Label_Image);
                         break;
                     default:
+                        if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+                        {
+                            try {
+                                String c = new String(AESUtil.toByte(AESUtil.encrypt("ron",talkBean.talkContent)));
+                                friendViewHolder.lastSpeed.setText(c);
+                            }catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                        }else
                         friendViewHolder.lastSpeed.setText(talkBean.talkContent);
                         break;
                 }
@@ -367,6 +390,11 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     };
 
 
+    @Subscribe(threadMode = ThreadMode.MainThread)
+    public void encodeKey(EncodeKeyEvent talkBean)
+    {
+        friendListAdapter.notifyDataSetChanged();
+    }
     @Subscribe(threadMode = ThreadMode.MainThread)
     public void setUserInfoOver(EventFriendListUpdate eventFriendListUpdate)
     {
@@ -400,6 +428,38 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
             Toast.makeText(this,"不能自己和自己聊天",Toast.LENGTH_SHORT).show();
             return;
         }
+        //TODO 未检测到可用的key--- ron
+        if(AppConfig.isServce )
+        {
+            RonLog.LogE( "" +ParseDataHelper.onlineUser.get(position).key);
+            if(TextUtils.isEmpty(ParseDataHelper.onlineUser.get(position).key) || TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+            {
+                if(uiUtil.getIsSuccess()) {
+                    dialogCreatUtil.showSingleBtnDialog(null, getString(R.string.keyIsloss), this);
+                    return;
+                }
+                else
+                {
+                    dialogCreatUtil.showSingleBtnDialog(null, getString(R.string.nomatch), this);
+                    return;
+                }
+            }
+        }
+
+
+       else if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
+        {
+            if(uiUtil.getIsSuccess()) {
+                dialogCreatUtil.showSingleBtnDialog(null, getString(R.string.keyIsloss), this);
+                return;
+            }
+            else
+            {
+                dialogCreatUtil.showSingleBtnDialog(null, getString(R.string.nomatch), this);
+                return;
+            }
+        }
+
         Intent intent = new Intent(this,SpeedActivity.class);
         intent.putExtra(SpeedActivity.TalkFromNick,ParseDataHelper.onlineUser.get(position).userNike);
         intent.putExtra(SpeedActivity.TalkFromID,ParseDataHelper.onlineUser.get(position).userID);
@@ -417,7 +477,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         EventBus.getDefault().post(new SecretKeyBean(!isWarn));
         if(isWarn)
         {
-            showKeyUtil.setKeyValue("");
+            showKeyUtil.onDestory();
             titleView.setText(R.string.keyIsloss);
             titleView.setTextColor(Color.RED);
         }else
@@ -440,43 +500,31 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         }else
             uiUtil.beginCheck(keyCheckEvent.isSuccess,key);*/
 
-        if(keyCheckEvent.type == KeyCheckEvent.CheckKeyResult && !AppConfig.isServce)
+       /* if(keyCheckEvent.isSuccess) {
+            AESKeyUitl.getSingleton().setEncode_key(keyCheckEvent.key);
+        }*/
+        uiUtil.setCheckResult(keyCheckEvent.isSuccess);
+
+       /* if(keyCheckEvent.type == KeyCheckEvent.CheckKeyResult && !AppConfig.isServce)
         {
             uiUtil.setCheckResult(keyCheckEvent.isSuccess);
-            if(keyCheckEvent.isSuccess)
+            if(keyCheckEvent.isSuccess) {
                 AESKeyUitl.getSingleton().setEncode_key(keyCheckEvent.key);
-        }else if(keyCheckEvent.type == KeyCheckEvent.CheckKeyBegin)
-            uiUtil.beginCheck(keyCheckEvent.isSuccess,keyCheckEvent.key);
-    }
-
-    private void getKeyFromUsb(String key)
-    {
-        if(AppConfig.isServce )
-        {
-            AESKeyUitl.getSingleton().setEncode_key(key);
-
-            if(dataKeyUtil == null )
-            {
-                dataKeyUtil = new DataKeyUtil(this);
             }
-            dataKeyUtil.insert(key);
-            Toast.makeText(this,R.string.Label_HadInsertSqlite,Toast.LENGTH_LONG).show();
-        }else
-        {
-            KeyBean keyBean = new KeyBean();
-            keyBean.clientID = AppConfig.clientId;
-            keyBean.key = key;
-            MyApp.getSingleApp().mySocket.sendKey2ServerCheckKey(keyBean);
-//            uiUtil.beginCheck(false,key);
-            EventBus.getDefault().post(new KeyCheckEvent(KeyCheckEvent.CheckKeyBegin,false,key));
-        }
+        }else if(keyCheckEvent.type == KeyCheckEvent.CheckKeyBegin) {
+            uiUtil.beginCheck(keyCheckEvent.isSuccess, keyCheckEvent.key);
+        }*/
     }
 
+    String[] arrayA ;
+    String[] arrayB ;
     private Handler handler = new Handler()
     {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
+
+            QuestionBean questionBean = null;
             switch (msg.what)
             {
                 case 0:
@@ -488,12 +536,13 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 //                        AESKeyUitl.getSingleton().setDecode_key("ron");
                         if(TextUtils.isEmpty(key))
                         {//刚刚才得到key
-                            key = msg.obj.toString();
+                            key = msg.obj.toString().trim();
                             setTitleAndColor(false);
-//                             getKeyFromUsb(key);
+//                             getKeyFromUsb(key);,
                         }
-
                         showKeyUtil.setKeyValue(msg.obj.toString().trim());
+
+
 
                         /*boolean setSuccess = AESKeyUitl.getSingleton().setEncode_key(msg.obj.toString());
                         if(setSuccess)
@@ -505,6 +554,91 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     break;
                 case 999:
                     MyApp.getSingleApp().exitApp();
+                    break;
+                case 998:
+                    btn_Bottom.setEnabled(true);
+                    break;
+                case QuestionBean.QuestionStep_2:
+                    questionBean = (QuestionBean) msg.obj;
+                    if(AppConfig.isServce)
+                    {
+                        uiUtil.addNewLog(arrayA[2] +":" + questionBean.key);
+                        if(dataKeyUtil == null)
+                            dataKeyUtil = new DataKeyUtil(MyApp.getSingleApp());
+
+                        if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()) || !dataKeyUtil.checkKeyIsExit(AESKeyUitl.getSingleton().getEncode_key()))
+                        {
+                            uiUtil.addNewLog(getString(R.string.Label_ServerKeyNoPuf));
+                            QuestionBean questionBean1 = new QuestionBean();
+                            questionBean1.type = QuestionBean.QuestionResult;
+                            questionBean1.key = "";
+                            questionBean1.isSuccess = false;
+                            MyApp.getSingleApp().mySocket.sendQuestion(questionBean1);
+                            return;
+                        } else  if(!uiUtil.getIsSuccess())
+                        {//如果检查是失败，就显示 puf失败
+                            uiUtil.addNewLog(getString(R.string.Label_CheckKey_ErrPuf));
+                            QuestionBean questionBean1 = new QuestionBean();
+                            questionBean1.type = QuestionBean.QuestionResult;
+                            questionBean1.key = "";
+                            questionBean1.isSuccess = false;
+                            MyApp.getSingleApp().mySocket.sendQuestion(questionBean1);
+                            return;
+                        }else
+                        {
+                            uiUtil.addNewLog(arrayA[3]);
+                        }
+                        //step2 服务器 完成后，主动请求 ,客户端回复over
+                        MyApp.getSingleApp().mySocket.sendQuestion(new
+                                QuestionBean(QuestionBean.QuestionStep_3,"",false,true));
+
+                    }else
+                    {
+                        uiUtil.addNewLog(arrayB[2] + ":" + showKeyUtil.cacheKey);
+                        if(uiUtil.getIsSuccess())
+                        //uiUtil.addNewLog(getString(R.string.Label_CheckKey_SuccessPuf));
+                        //发送给服务器端 服务器第二次 请求要 客户端的key
+                        MyApp.getSingleApp().mySocket.sendQuestion(new
+                                QuestionBean(QuestionBean.QuestionStep_2,showKeyUtil.cacheKey,false,false));
+                    }
+                    break;
+                case QuestionBean.QuestionStep_3:
+                    questionBean = (QuestionBean) msg.obj;
+                    if(!AppConfig.isServce)//客户端
+                    {
+                        if(questionBean.isQuestion)
+                        {
+                            uiUtil.addNewLog(arrayB[4]);
+                            MyApp.getSingleApp().mySocket.sendQuestion(new
+                                    QuestionBean(QuestionBean.QuestionStep_3,"",false,false));
+                        }else
+                        {
+                            uiUtil.addNewLog(arrayB[5] + ":" + questionBean.key);
+                            MyApp.getSingleApp().mySocket.sendQuestion(new
+                                    QuestionBean(QuestionBean.QuestionStep_4,"",false,false));
+                        }
+
+                    }else
+                    {//服务端
+                        uiUtil.addNewLog(arrayA[4]);
+                        uiUtil.addNewLog(arrayA[5] + showKeyUtil.cacheKey);
+
+                        MyApp.getSingleApp().mySocket.sendQuestion(new
+                                QuestionBean(QuestionBean.QuestionStep_3,showKeyUtil.cacheKey,false,false));
+                    }
+                    break;
+                case QuestionBean.QuestionStep_4:
+                    questionBean = (QuestionBean) msg.obj;
+                    if(AppConfig.isServce)
+                    {
+                        uiUtil.addNewLog(arrayA[6] +":" + showKeyUtil.cacheKey);
+                        uiUtil.addNewLog(arrayA[7]);
+                        MyApp.getSingleApp().mySocket.sendQuestion(new
+                                QuestionBean(QuestionBean.QuestionStep_5,showKeyUtil.cacheKey,false,false));
+                    }else
+                    {
+
+                    }
                     break;
             }
         }
@@ -526,12 +660,86 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                 exception.printStackTrace();
             }
             friendListAdapter.notifyDataSetChanged();
-
         }
     }
 
 
+    @Subscribe(threadMode = ThreadMode.MainThread)
+    public void checkQuestion(QuestionBean questionBean)
+    {
+        if(TextUtils.isEmpty(showKeyUtil.cacheKey))
+        {
+            uiUtil.addNewLog(getString(R.string.keyIsloss));
+            MyApp.getSingleApp().mySocket.sendQuestion(new
+                    QuestionBean(QuestionBean.QuestionResult,showKeyUtil.cacheKey,false,true));
+            btn_Bottom.setEnabled(true);
+            return;
+        }
 
+        String[] arrayA = getResources().getStringArray(R.array.CheckQuest_list_A);
+        String[] arrayB = getResources().getStringArray(R.array.CheckQuest_list_B);
+        switch (questionBean.type)
+        {
+            case QuestionBean.QuestionStep_1:
+                if(AppConfig.isServce)
+                {
+                    if(questionBean.isQuestion)
+                    {
+                        uiUtil.addNewLog(getString(R.string.Label_Client_begin));
+                        uiUtil.addNewLog(arrayA[0]);
+                        MyApp.getSingleApp().mySocket.sendQuestion(new
+                                QuestionBean(QuestionBean.QuestionStep_1,"",false,true));
+                    }else
+                    {
+                        uiUtil.addNewLog(arrayA[1]+":" + questionBean.key);
+                        MyApp.getSingleApp().mySocket.sendQuestion(new
+                                QuestionBean(QuestionBean.QuestionStep_2,"",false,true));
+                    }
+                }else
+                {
+                    uiUtil.addNewLog(arrayB[0]);
+                    uiUtil.addNewLog(arrayB[1] + ":" + showKeyUtil.cacheKey);
+                    //发送回复服务器的请求
+                    MyApp.getSingleApp().mySocket.sendQuestion(new
+                            QuestionBean(QuestionBean.QuestionStep_1,showKeyUtil.cacheKey,false,false));
+                }
+                break;
+            case QuestionBean.QuestionStep_2:
+               Message msg_2 = handler.obtainMessage(QuestionBean.QuestionStep_2,questionBean);
+                handler.sendMessageDelayed(msg_2,1000);
+                break;
+            case QuestionBean.QuestionStep_3:
+                Message msg_3 = handler.obtainMessage(QuestionBean.QuestionStep_3,questionBean);
+                handler.sendMessageDelayed(msg_3,1000);
+                break;
+            case QuestionBean.QuestionStep_4:
+
+                Message msg_4 = handler.obtainMessage(QuestionBean.QuestionStep_4,questionBean);
+                handler.sendMessageDelayed(msg_4,1000);
+                break;
+            case QuestionBean.QuestionResult:
+                if(!questionBean.isSuccess)
+                {
+                    uiUtil.addNewLog(getString(R.string.Label_CheckKey_ErrPuf));
+                 }
+                break;
+            case QuestionBean.QuestionStep_5:
+                if(!AppConfig.isServce)
+                {
+                    if(dataKeyUtil == null )
+                    {
+                        dataKeyUtil = new DataKeyUtil(this);
+                    }
+                    dataKeyUtil.insert(showKeyUtil.lastRealyKey);
+                    AESKeyUitl.getSingleton().setEncode_key(showKeyUtil.lastRealyKey);
+                }
+
+                uiUtil.addNewLog(arrayB[5] + ":" + questionBean.key);
+                uiUtil.addNewLog(arrayB[7]);
+                uiUtil.addNewLog(arrayB[8]);
+                break;
+        }
+    }
 
     @Subscribe(threadMode = ThreadMode.MainThread)
     public void userOnline(EventDownLine eventDownLine)
@@ -560,11 +768,13 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         TextView name;
         TextView speedNum;
         TextView lastSpeed;
+        View bg;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        showKeyUtil.onDestory();
         uiUtil.onDestory();
         MyApp.getSingleApp().mySocket.stop();
         MyApp.getSingleApp().mySocket = null;

@@ -51,6 +51,8 @@ public class SplashActivty extends BaseActivity
     private WifiReceiver wifiReceiver;
     private boolean isConnected=false;
 
+    private boolean isClickService;
+
     /**************
      * 客户端连接成功
      */
@@ -102,6 +104,7 @@ public class SplashActivty extends BaseActivity
      */
     private void createSocket(boolean isServer)
     {
+        isClickService = isServer;
         if(isServer )
         {
             if(WifiUtil.isWifiApEnabled(this))
@@ -112,7 +115,7 @@ public class SplashActivty extends BaseActivity
                 return;
             }
 
-            boolean isOpen = WifiUtil.setWifiApEnabled(SplashActivty.this,true);
+            boolean isOpen =  WifiUtil.setWifiApEnabled(SplashActivty.this,true);
             if( isOpen )
             {
                 AppConfig.clientIp = getLocalIpAddress();
@@ -445,7 +448,8 @@ public class SplashActivty extends BaseActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         RonLog.LogE("反馈了：：："+ requestCode);
-        init();
+//        init();
+        createSocket(isClickService);
     }
 
     /***********************

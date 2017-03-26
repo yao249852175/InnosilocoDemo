@@ -1,16 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.1"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
     aaptOptions.cruncherEnabled = false
     aaptOptions.useNewCruncher = false
     defaultConfig {
         applicationId "innosiloco.demo"
         minSdkVersion 15
-        targetSdkVersion 25
-        versionCode 3
-        versionName "1.03"
+        targetSdkVersion 23
+        versionCode 5
+        versionName "1.05"
 
     }
     buildTypes {
@@ -24,6 +24,6 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:25.0.1'
+    compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'de.greenrobot:eventbus:3.0.0-beta1'
 }

@@ -41,7 +41,7 @@ public class FileUtils
 
     public static String getRandomErrFile(boolean isImg)
     {
-        int ramdom = (int)Math.random()*100;
+        int ramdom = (int)(Math.random()*100);
         if(isImg)
         {
             ramdom = ramdom%3;
@@ -63,7 +63,7 @@ public class FileUtils
      * 检测Sdcard是否存在
      */
     public static boolean isExitsSdcard() {
-        if (android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED))
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
             return true;
         else
             return false;

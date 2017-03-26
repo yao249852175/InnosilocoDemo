@@ -1,5 +1,6 @@
 package innosiloco.demo.service;
 
+import android.content.pm.LabeledIntent;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -11,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import innosiloco.demo.beans.FrameBean;
 import innosiloco.demo.beans.KeyBean;
+import innosiloco.demo.beans.QuestionBean;
 import innosiloco.demo.beans.TalkBean;
 import innosiloco.demo.beans.UserBean;
 import innosiloco.demo.utils.AESKeyUitl;
@@ -58,13 +60,17 @@ public class ParseDataHelper
             RonLog.LogE("机密前:" + talkBean.talkContent);
 //            byte[] content = AESUtil.encryptArgByte(
 //                    AESKeyUitl.getSingleton().getEncode_key().getBytes(),talkBean.talkContent.getBytes(utf_8));
-//            talkBean.talkContent = new String(content,utf_8);
             TalkBean talkBean1 = new TalkBean();
             talkBean1.toID = talkBean.toID;
             talkBean1.sendID = talkBean.sendID;
+            talkBean1.talkContent = talkBean.talkContent;
+            String key = AESKeyUitl.getSingleton().getEncode_key();
+            if(TextUtils.isEmpty(key))
+            {
+                key = "ron_test";
+            }
 
-
-            talkBean1.talkContent= AESUtil.encrypt(AESKeyUitl.getSingleton().getEncode_key(),talkBean.talkContent);
+//            talkBean1.talkContent= AESUtil.encrypt(key,talkBean.talkContent);
             RonLog.LogE("加密后:" + talkBean1.talkContent);
             Gson gson = new Gson();
             String json = gson.toJson(talkBean1);
@@ -99,11 +105,13 @@ public class ParseDataHelper
                 RonLog.LogE("sendID:" + talkBean.sendID + ",decodeKey:" + decodeKey + ",encode:" + AESKeyUitl.getSingleton().getEncode_key());
                 if(!TextUtils.isEmpty(decodeKey) &&
                         !TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()))
-                talkBean.talkContent = AESUtil.decrypt(decodeKey,talkBean.talkContent);
+                {
+//                    talkBean.talkContent = AESUtil.decrypt(decodeKey,talkBean.talkContent);
+                }
                 else
                 {//乱码显示
-                    String c = new String(AESUtil.toByte(talkBean.talkContent));
-                    talkBean.talkContent = c;
+                    /*String c = new String(AESUtil.toByte(AESUtil.encrypt("ron",talkBean.talkContent)));
+                    talkBean.talkContent = c;*/
                 }
                 RonLog.LogE("解密后:" + talkBean.talkContent);
             }catch (Exception e)
@@ -145,6 +153,20 @@ public class ParseDataHelper
         return f;
     }
 
+
+    public static String Question2Json(QuestionBean keyBean)
+    {
+        Gson gson = new Gson();
+        return gson.toJson(keyBean);
+    }
+
+    public static QuestionBean json2Question(String json)
+    {
+        Gson gson = new Gson();
+        QuestionBean f =  gson.fromJson(json,QuestionBean.class);
+        return f;
+    }
+
     /****************************
      * json转Friend
      * @param json
@@ -173,6 +195,14 @@ public class ParseDataHelper
     {
         Gson gson = new Gson();
         List<UserBean> beans = gson.fromJson(json, new TypeToken<List<UserBean>>(){}.getType());
+        UserBean userBean = null;
+        if(beans.size() > 0 && beans.get(0).userID == AppConfig.clientId)
+        {
+            userBean = beans.get(0);
+            beans.remove(0);
+            beans.add(userBean);
+        }
+
         return beans;
     }
 

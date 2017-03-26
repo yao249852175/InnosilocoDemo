@@ -1,10 +1,13 @@
 package innosiloco.demo.utils;
 
 import java.security.SecureRandom;
+import java.security.spec.KeySpec;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
@@ -13,36 +16,60 @@ import javax.crypto.spec.SecretKeySpec;
 public class AESUtil
 {
     public static String encrypt(String seed, String cleartext) throws Exception {
-        byte[] rawKey = getRawKey(seed.getBytes());
+        byte[] rawKey = getRawKey(seed);
         RonLog.LogE("rawKey:"+ rawKey.length);
         byte[] result = encrypt(rawKey, cleartext.getBytes());
         return toHex(result);
     }
 
-    public static byte[] encryptArgByte(byte[] seed, byte[] cleartext) throws Exception {
+  /*  public static byte[] encryptArgByte(byte[] seed, byte[] cleartext) throws Exception {
         byte[] rawKey = getRawKey(seed);
         RonLog.LogE("rawKey:"+ rawKey.length);
         byte[] result = encrypt(rawKey,cleartext);
         return result;
-    }
+    }*/
 
-    public static byte[] decryptArgByte(byte[] seed, byte[] encrypted) throws Exception {
+ /*   public static byte[] decryptArgByte(byte[] seed, byte[] encrypted) throws Exception {
         byte[] rawKey = getRawKey(seed);
         RonLog.LogE("rawKey:"+ rawKey.length);
         byte[] result = decrypt(rawKey, encrypted);
         return result;
-    }
+    }*/
 
     public static String decrypt(String seed, String encrypted) throws Exception {
-        byte[] rawKey = getRawKey(seed.getBytes());
+        byte[] rawKey = getRawKey(seed);
         RonLog.LogE("rawKey:"+ rawKey.length);
         byte[] enc = toByte(encrypted);
         byte[] result = decrypt(rawKey, enc);
         return new String(result);
     }
 
-    private static byte[] getRawKey(byte[] seed) throws Exception {
-        KeyGenerator kgen = KeyGenerator.getInstance("AES");
+    private static byte[] getRawKey(String password) throws Exception
+    {
+        /* User types in their password: */
+
+   /* Store these things on disk used to derive key later: */
+        int iterationCount = 1000;
+        int saltLength = 32; // bytes; should be the same size as the output (256 / 8 = 32)
+        int keyLength = 256; // 256-bits for AES-256, 128-bits for AES-128, etc
+      //  byte[] salt; // Should be of saltLength
+
+   /* When first creating the key, obtain a salt with this: */
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[saltLength];
+        random.nextBytes(salt);
+   /* Use this to derive the key from the password: */
+        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt,
+                iterationCount, keyLength);
+        SecretKeyFactory keyFactory = SecretKeyFactory
+                .getInstance("PBKDF2WithHmacSHA1");
+        byte[] keyBytes = keyFactory.generateSecret(keySpec).getEncoded();
+       /* SecretKey key = new SecretKeySpec(keyBytes, "AES");
+        byte[] raw = key.getEncoded();*/
+        return  keyBytes;
+
+
+        /*KeyGenerator kgen = KeyGenerator.getInstance("AES");
         SecureRandom sr = null;
         if (android.os.Build.VERSION.SDK_INT >=  17) {
             sr = SecureRandom.getInstance("SHA1PRNG", "Crypto");
@@ -53,7 +80,7 @@ public class AESUtil
         kgen.init(256, sr); // 192 and 256 bits may not be available
         SecretKey skey = kgen.generateKey();
         byte[] raw = skey.getEncoded();
-        return raw;
+        return raw;*/
     }
 
 

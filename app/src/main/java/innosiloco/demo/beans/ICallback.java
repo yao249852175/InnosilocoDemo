@@ -5,5 +5,5 @@ package innosiloco.demo.beans;
  */
 public interface ICallback
 {
-    public void callBack(int result,Object oj);
+    public void callBack(int result, Object oj);
 }
