@@ -65,11 +65,11 @@ public class DataKeyUtil
      */
     public boolean checkKeyIsExit(String key )
     {
-        RonLog.LogE("key:" + key);
+//        RonLog.LogE("key:" + key);
         List<String > keys = queryAllKey();
         for (String key_s: keys)
         {
-            RonLog.LogE("key_s:" + key_s);
+//            RonLog.LogE("key_s:" + key_s);
             if(key_s.equals(key))
             {
                 return true;

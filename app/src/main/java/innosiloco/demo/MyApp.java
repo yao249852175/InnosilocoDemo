@@ -4,6 +4,7 @@ import android.app.Application;
 import android.os.Process;
 
 import innosiloco.demo.service.MySocket;
+import innosiloco.demo.utils.CrashHandler;
 
 /**
  * Created by Administrator on 2017/2/26.
@@ -22,6 +23,8 @@ public class MyApp extends Application
     public void onCreate() {
         super.onCreate();
         this.myapp = this;
+        CrashHandler crashHandler = CrashHandler.getInstance();
+        crashHandler.init(getApplicationContext());
     }
 
     public void exitApp()

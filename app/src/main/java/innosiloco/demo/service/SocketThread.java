@@ -235,7 +235,7 @@ public class SocketThread
                 while(writeAndReadAble)
                 {
                     data = (byte) inputStream.read();
-                    RonLog.LogE("data:" + data);
+//                    RonLog.LogE("data:" + data);
                     if(data == -1 )
                     {//socket异常关闭
                         dataIsErrCount ++;
@@ -271,7 +271,7 @@ public class SocketThread
     private void parseData(byte[] data ,int length)
     {
         //文件传输没有做校验操作。所以在校验前面检查
-        RonLog.LogE("cmdIndex:" + data[2]);
+        RonLog.LogE("ron*******cmdIndex:" + data[2]);
         if(data[2] == AppConfig.ResponseFile)//对方放松文件来了
         {
             try {

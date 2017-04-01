@@ -128,7 +128,7 @@ public class ShowKeyUtil
             }
             begin = false;
         }
-        RonLog.LogE("beginLog:" + beginLog);
+//        RonLog.LogE("beginLog:" + beginLog);
         if(beginLog == true && AppConfig.isServce )
         {
 

@@ -50,6 +50,7 @@ import innosiloco.demo.utils.AESUtil;
 import innosiloco.demo.utils.AppConfig;
 import innosiloco.demo.utils.CheckKeyUIUtil;
 import innosiloco.demo.utils.RonLog;
+import innosiloco.demo.utils.ShowDialogUtil;
 import innosiloco.demo.utils.ShowKeyUtil;
 import innosiloco.demo.utils.TalkHelper;
 
@@ -108,6 +109,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
     private PendingIntent mPermissionIntent;
+    private ShowDialogUtil showDialogUtil;
     @Override
     public void initViews()
     {
@@ -133,6 +135,17 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
         registerReceiver(mUsbReceiver, filter);
         mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         beginCheckDevice();
+
+        titleView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(showDialogUtil == null )
+                {
+                    showDialogUtil = new ShowDialogUtil();
+                }
+                showDialogUtil.showLogDialog(FriendsActivity.this);
+            }
+        });
     }
 
     /***********************
@@ -588,6 +601,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
 
                         if(TextUtils.isEmpty(AESKeyUitl.getSingleton().getEncode_key()) || !dataKeyUtil.checkKeyIsExit(AESKeyUitl.getSingleton().getEncode_key()))
                         {
+                            RonLog.LogE("服务器端回复问题2:服务器的key有问题");
                             uiUtil.addNewLog(getString(R.string.Label_ServerKeyNoPuf));
                             QuestionBean questionBean1 = new QuestionBean();
                             questionBean1.type = QuestionBean.QuestionResult;
@@ -597,6 +611,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                             return;
                         } else  if(!uiUtil.getIsSuccess())
                         {//如果检查是失败，就显示 puf失败
+                            RonLog.LogE("服务器端回复问题2:客户端的key有问题");
                             uiUtil.addNewLog(getString(R.string.Label_CheckKey_ErrPuf));
                             QuestionBean questionBean1 = new QuestionBean();
                             questionBean1.type = QuestionBean.QuestionResult;
@@ -608,6 +623,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                         {
                             uiUtil.addNewLog(arrayA[3]);
                         }
+                        RonLog.LogE("服务器端完成step2,发送step3");
                         //step2 服务器 完成后，主动请求 ,客户端回复over
                         MyApp.getSingleApp().mySocket.sendQuestion(new
                                 QuestionBean(QuestionBean.QuestionStep_3,"",false,true));
@@ -615,11 +631,12 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     }else
                     {
                         uiUtil.addNewLog(arrayB[2] + ":" + showKeyUtil.cacheKey);
-                        if(uiUtil.getIsSuccess())
+//                        if(uiUtil.getIsSuccess())
                         //uiUtil.addNewLog(getString(R.string.Label_CheckKey_SuccessPuf));
                         //发送给服务器端 服务器第二次 请求要 客户端的key
                         MyApp.getSingleApp().mySocket.sendQuestion(new
                                 QuestionBean(QuestionBean.QuestionStep_2,showKeyUtil.cacheKey,false,false));
+                        RonLog.LogE("客户端回复Step2");
                     }
                     break;
                 case QuestionBean.QuestionStep_3:
@@ -710,11 +727,13 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                         uiUtil.addNewLog(arrayA[0]);
                         MyApp.getSingleApp().mySocket.sendQuestion(new
                                 QuestionBean(QuestionBean.QuestionStep_1,"",false,true));
+                        RonLog.LogE("服务器端发送问题1");
                     }else
                     {
                         uiUtil.addNewLog(arrayA[1]+":" + questionBean.key);
                         MyApp.getSingleApp().mySocket.sendQuestion(new
                                 QuestionBean(QuestionBean.QuestionStep_2,"",false,true));
+                        RonLog.LogE("服务器发送问题2");
                     }
                 }else
                 {
@@ -723,6 +742,7 @@ public class FriendsActivity extends BaseActivity implements AdapterView.OnItemC
                     //发送回复服务器的请求
                     MyApp.getSingleApp().mySocket.sendQuestion(new
                             QuestionBean(QuestionBean.QuestionStep_1,showKeyUtil.cacheKey,false,false));
+                    RonLog.LogE("客户端回答问题1");
                 }
                 break;
             case QuestionBean.QuestionStep_2:
